@@ -1,0 +1,159 @@
+---
+title: "Calculate Property Reconstruction Cost with Ask Wire"
+sidebarTitle: "Valuation"
+description: "Estimate the as-new and depreciated reconstruction cost of a property in Greece and Cyprus using postal code, property type, and build area."
+---
+
+The Ask Wire Reconstruction Cost API calculates how much it would cost to rebuild a property from scratch — useful for insurance valuations, mortgage underwriting, and asset appraisals. Pass the property's postal code, type, and build area to receive the **as-new** replacement value. Add a construction year to also receive the **as-is** (depreciated) value, which accounts for the building's age.
+
+<Note>
+  Only the **first two digits** of the postal code are used for the cost lookup — the API maps your property to a regional cost table based on the postal code prefix. Always supply the full postal code; the API extracts the prefix automatically.
+</Note>
+
+## Base URL
+
+```
+https://pandora.ask-wire.com/api/reconstruction-cost/
+```
+
+---
+
+## How it works
+
+The API applies a per-region construction cost rate to your `build_area` to produce the as-new value. When you supply a `construction_year`, the API also calculates a depreciation factor based on the building's age and returns the resulting as-is value alongside the as-new figure.
+
+- **As-new (`reconstruction_cost.as_new`)** — the cost to build an equivalent new property today. Always returned.
+- **As-is (`reconstruction_cost.as_is`)** — the depreciated value accounting for the building's age. Only returned when `construction_year` is provided.
+
+---
+
+## Query parameters
+
+| Parameter           | Type    | Required | Constraints                                                    | Description                                                                     |
+| ------------------- | ------- | -------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `postal_code`       | string  | Yes      | Numeric, minimum two digits                                    | Full postal code. Only the first two digits are used for the regional lookup.   |
+| `property_type`     | string  | Yes      | `apartment`, `house`, `maisonette`                             | Property type — determines the applicable construction cost table.              |
+| `build_area`        | number  | Yes      | Must be greater than `0`                                       | Build area in square metres.                                                    |
+| `construction_year` | integer | No       | Must not be in the future                                      | Year of construction. When supplied, the as-is depreciated value is included.  |
+
+---
+
+## Response fields
+
+| Field                        | Type   | Description                                                                     |
+| ---------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `reconstruction_cost.as_new` | number | As-new reconstruction cost in euros. Always present.                            |
+| `reconstruction_cost.as_is`  | number | As-is (depreciated) value in euros. Only present when `construction_year` was supplied. |
+
+---
+
+## Error responses
+
+| Status | When                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------- |
+| `400`  | A required parameter is missing, non-numeric, zero, or the construction year is in the future. |
+| `422`  | No reconstruction cost mapping exists for the given postal code prefix and property type combination. |
+
+<Warning>
+  A `422` response means Ask Wire does not yet have a cost table for your postal code prefix and property type. This is not a request error — check the postal code and property type values, and contact support if the combination should be covered.
+</Warning>
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="As-new only">
+    Omit `construction_year` to receive only the as-new reconstruction cost.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/reconstruction-cost/?postal_code=10563&property_type=apartment&build_area=95" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "reconstruction_cost": {
+        "as_new": 145000.0
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="As-new and as-is (with construction year)">
+    Add `construction_year` to receive both the as-new and the depreciated as-is value.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/reconstruction-cost/?postal_code=10563&property_type=apartment&build_area=95&construction_year=2005" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "reconstruction_cost": {
+        "as_new": 145000.0,
+        "as_is": 112000.0
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Step-by-step: run a reconstruction cost calculation
+
+<Steps>
+  <Step title="Gather the property details">
+    You need three required values before making a request:
+
+    - The **full postal code** (e.g. `10563` for central Athens, `1010` for Nicosia)
+    - The **property type**: `apartment`, `house`, or `maisonette`
+    - The **build area** in square metres (must be greater than 0)
+
+    Optionally, collect the **construction year** if you need the depreciated (as-is) value.
+  </Step>
+
+  <Step title="Send the request">
+    Call the endpoint with your parameters. Add `construction_year` only when you need the as-is value.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/reconstruction-cost/?postal_code=17563&property_type=house&build_area=180&construction_year=1998" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Read the response">
+    The `as_new` value is always present. If you supplied a `construction_year`, `as_is` will also appear in the `reconstruction_cost` object.
+
+    ```json
+    {
+      "reconstruction_cost": {
+        "as_new": 270000.0,
+        "as_is": 198000.0
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Handle error cases">
+    - If you receive a `400`, check that all required parameters are present, that `build_area` is greater than zero, and that `construction_year` (if supplied) is not a future year.
+    - If you receive a `422`, the postal code prefix and property type combination is not yet mapped. Verify the values are correct; if they are, contact Ask Wire support.
+  </Step>
+</Steps>
+
+---
+
+<Accordion title="Property type definitions">
+
+| Value        | Use when the property is…                                                              |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `apartment`  | A self-contained unit within a multi-unit residential building.                        |
+| `house`      | A standalone or semi-detached single-family dwelling.                                  |
+| `maisonette` | A multi-level residential unit, typically occupying two floors within a larger building.|
+
+</Accordion>

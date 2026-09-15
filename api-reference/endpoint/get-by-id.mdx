@@ -1,0 +1,449 @@
+---
+title: "GET /api/properties/{id}/ — Retrieve a Property by ID"
+sidebarTitle: "Get by ID"
+description: "Fetch a single property record by its Ask Wire integer ID. Returns the full Property object including all fields, or 404 if the ID does not exist."
+---
+
+Use this endpoint when you already know a property's Ask Wire `id` and want to retrieve its complete record in a single call. If you only have the source platform's identifier (e.g. a portal listing number), use [Get by Reference ID](/api-reference/endpoint/get-by-reference-id) instead. To discover IDs through search, use [List Properties](/api-reference/endpoint/get).
+
+All requests require a valid Bearer token in the `Authorization` header.
+
+---
+
+## Path parameter
+
+<ParamField path="id" type="integer" required>
+  The unique Ask Wire integer ID of the property to retrieve.
+</ParamField>
+
+---
+
+## Example request
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/1/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Response
+
+Returns a single Property object on success (`200 OK`). Returns `404 Not Found` if no property exists with the given ID.
+
+### Core fields
+
+<ResponseField name="id" type="integer">
+  Unique Ask Wire property ID.
+</ResponseField>
+
+<ResponseField name="reference_id" type="string">
+  The source platform's own identifier for this property.
+</ResponseField>
+
+<ResponseField name="polymorphic_type" type="string">
+  Property type: `listing` or `foreclosure`.
+</ResponseField>
+
+<ResponseField name="listing_type" type="string">
+  For listings: `sale`, `rent`, or `sold`.
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  Country where the property is located, e.g. `greece` or `cyprus`.
+</ResponseField>
+
+<ResponseField name="address" type="string">
+  Full address string as provided by the source.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Direct URL to the property listing on its source platform.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Property description as provided by the source.
+</ResponseField>
+
+<ResponseField name="images" type="string">
+  URL to the property's primary image.
+</ResponseField>
+
+<ResponseField name="source" type="string">
+  Source platform name, e.g. `spitogatos`, `xe`.
+</ResponseField>
+
+<ResponseField name="source_type" type="string">
+  Source category, e.g. `broker`, `owner`.
+</ResponseField>
+
+<ResponseField name="tags" type="array">
+  List of tag IDs associated with the property.
+</ResponseField>
+
+---
+
+### Price
+
+<ResponseField name="price" type="number">
+  Listed price in euros.
+</ResponseField>
+
+<ResponseField name="price_per_sqm" type="number">
+  Price divided by build area (€/sqm).
+</ResponseField>
+
+---
+
+### Location
+
+<ResponseField name="latitude" type="number">
+  Latitude coordinate.
+</ResponseField>
+
+<ResponseField name="longitude" type="number">
+  Longitude coordinate.
+</ResponseField>
+
+<ResponseField name="coordinates" type="string">
+  WKT point string, e.g. `POINT(23.7275 37.9838)`.
+</ResponseField>
+
+<ResponseField name="region" type="integer">
+  ID of the region (level 3 in the Ask Wire geographic hierarchy).
+</ResponseField>
+
+<ResponseField name="regional_unit" type="integer">
+  ID of the regional unit (level 4).
+</ResponseField>
+
+<ResponseField name="municipality" type="object">
+  Municipality object. See [GeoEntity](#geoentity) below.
+</ResponseField>
+
+<ResponseField name="municipal_unit" type="object">
+  Municipal unit object. See [GeoEntity](#geoentity) below.
+</ResponseField>
+
+<ResponseField name="neighborhood" type="integer">
+  ID of the neighborhood.
+</ResponseField>
+
+---
+
+### Size & layout
+
+<ResponseField name="build_area" type="number">
+  Built area in square metres.
+</ResponseField>
+
+<ResponseField name="land_area" type="number">
+  Land area in square metres.
+</ResponseField>
+
+<ResponseField name="covered_veranda_area" type="number">
+  Covered veranda area in square metres.
+</ResponseField>
+
+<ResponseField name="uncovered_veranda_area" type="number">
+  Uncovered veranda area in square metres.
+</ResponseField>
+
+<ResponseField name="number_of_bedrooms" type="integer">
+  Number of bedrooms.
+</ResponseField>
+
+<ResponseField name="number_of_bathrooms" type="integer">
+  Number of bathrooms.
+</ResponseField>
+
+<ResponseField name="floor_number" type="integer">
+  Floor the property is on.
+</ResponseField>
+
+<ResponseField name="building_floor_count" type="integer">
+  Total number of floors in the building.
+</ResponseField>
+
+---
+
+### Building details
+
+<ResponseField name="construction_year" type="integer">
+  Year the building was constructed.
+</ResponseField>
+
+<ResponseField name="renovated" type="boolean">
+  Whether the property has been renovated.
+</ResponseField>
+
+<ResponseField name="renovation_year" type="integer">
+  Year of the most recent renovation.
+</ResponseField>
+
+<ResponseField name="property_type" type="string">
+  Property category, e.g. `apartment`, `house`, `land`.
+</ResponseField>
+
+<ResponseField name="heating_type" type="string">
+  Type of heating system, e.g. `autonomous`, `central`.
+</ResponseField>
+
+<ResponseField name="energy_class" type="string">
+  Energy performance rating: `A` through `G`, `Exempt`, or `Under issuance`.
+</ResponseField>
+
+<ResponseField name="view" type="string">
+  Type of view from the property, e.g. `sea`, `city`, `mountain`.
+</ResponseField>
+
+<ResponseField name="garage" type="boolean">
+  Whether the property includes a garage.
+</ResponseField>
+
+<ResponseField name="garden" type="boolean">
+  Whether the property includes a garden.
+</ResponseField>
+
+<ResponseField name="swimming_pool" type="boolean">
+  Whether the property includes a swimming pool.
+</ResponseField>
+
+---
+
+### Status & data quality
+
+<ResponseField name="is_live" type="boolean">
+  Property is currently active on its source platform.
+</ResponseField>
+
+<ResponseField name="is_public" type="boolean">
+  Property is publicly visible in Ask Wire.
+</ResponseField>
+
+<ResponseField name="is_modified" type="boolean">
+  Property data has been modified since first ingestion.
+</ResponseField>
+
+<ResponseField name="is_manually_updated" type="boolean">
+  A human operator has manually updated this property's data.
+</ResponseField>
+
+<ResponseField name="is_ai_updated" type="boolean">
+  The Ask Wire AI pipeline has updated this property's data.
+</ResponseField>
+
+<ResponseField name="is_ai_processed" type="boolean">
+  This property has been processed by the Ask Wire AI pipeline.
+</ResponseField>
+
+<ResponseField name="is_ai_mismatched" type="boolean">
+  The AI pipeline detected a data discrepancy for this property.
+</ResponseField>
+
+<ResponseField name="comparable" type="boolean">
+  Property is suitable for use as a comparable in valuations.
+</ResponseField>
+
+<ResponseField name="outlier" type="boolean">
+  Property is flagged as a statistical outlier.
+</ResponseField>
+
+<ResponseField name="is_duplicated" type="boolean">
+  Property is a duplicate of another record.
+</ResponseField>
+
+<ResponseField name="is_master_property" type="boolean">
+  Property is the canonical record in a duplicate group.
+</ResponseField>
+
+<ResponseField name="is_leader" type="boolean">
+  Property is the current active leader in a duplicate group.
+</ResponseField>
+
+<ResponseField name="is_deduplication_processed" type="boolean">
+  Deduplication has been run on this property.
+</ResponseField>
+
+<ResponseField name="master_property_id" type="integer">
+  ID of the master property if this record is a duplicate.
+</ResponseField>
+
+---
+
+### Timestamps
+
+<ResponseField name="created_at" type="datetime">
+  When the record was created in the Ask Wire database.
+</ResponseField>
+
+<ResponseField name="modified_at" type="datetime">
+  When the record was last modified.
+</ResponseField>
+
+<ResponseField name="first_seen_at" type="datetime">
+  When the property was first observed live on its source platform.
+</ResponseField>
+
+<ResponseField name="last_seen_at" type="datetime">
+  When the property was last observed live on its source platform.
+</ResponseField>
+
+<ResponseField name="delisted_at" type="datetime | null">
+  When the property was taken off market. `null` if it is still active.
+</ResponseField>
+
+---
+
+### Seller
+
+<ResponseField name="seller" type="object">
+  Object describing the seller associated with this property.
+
+  <Expandable title="seller fields">
+    <ResponseField name="id" type="integer">
+      Unique seller ID.
+    </ResponseField>
+    <ResponseField name="display_name" type="string">
+      Seller's display name.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### GeoEntity
+
+The `municipality` and `municipal_unit` fields return a GeoEntity object with the following structure.
+
+<ResponseField name="id" type="integer">
+  Unique geographic unit ID.
+</ResponseField>
+
+<ResponseField name="name_en" type="string">
+  Name in English.
+</ResponseField>
+
+<ResponseField name="name_gr" type="string">
+  Name in Greek.
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  Short code for this geographic unit.
+</ResponseField>
+
+<ResponseField name="parent_code" type="string">
+  Code of the parent geographic unit.
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer">
+  ID of the parent geographic unit.
+</ResponseField>
+
+<ResponseField name="level" type="integer">
+  Level in the Ask Wire geographic hierarchy.
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  Country this unit belongs to.
+</ResponseField>
+
+<ResponseField name="created_at" type="datetime">
+  When this geographic record was created.
+</ResponseField>
+
+<ResponseField name="modified_at" type="datetime">
+  When this geographic record was last modified.
+</ResponseField>
+
+---
+
+## Example response
+
+```json
+{
+  "id": 1,
+  "polymorphic_type": "listing",
+  "listing_type": "sale",
+  "property_type": "apartment",
+  "reference_id": "PROP-001",
+  "price": 250000,
+  "price_per_sqm": 2083,
+  "build_area": 120,
+  "land_area": 150,
+  "number_of_bedrooms": 3,
+  "number_of_bathrooms": 2,
+  "floor_number": 3,
+  "building_floor_count": 5,
+  "construction_year": 2010,
+  "renovated": true,
+  "renovation_year": 2022,
+  "energy_class": "A",
+  "heating_type": "autonomous",
+  "view": "city",
+  "garage": true,
+  "garden": false,
+  "swimming_pool": false,
+  "address": "Athens, Greece",
+  "latitude": 37.9838,
+  "longitude": 23.7275,
+  "coordinates": "POINT(23.7275 37.9838)",
+  "country": "greece",
+  "source": "spitogatos",
+  "source_type": "broker",
+  "url": "https://example.com/property/1",
+  "description": "Modern apartment in Athens centre",
+  "images": "https://example.com/image.jpg",
+  "is_live": true,
+  "is_public": true,
+  "is_modified": false,
+  "is_manually_updated": false,
+  "is_ai_updated": true,
+  "is_ai_processed": true,
+  "is_ai_mismatched": false,
+  "comparable": true,
+  "outlier": false,
+  "is_duplicated": false,
+  "is_master_property": true,
+  "is_leader": true,
+  "is_deduplication_processed": true,
+  "master_property_id": 1,
+  "region": 1,
+  "regional_unit": 3,
+  "municipality": {
+    "id": 1,
+    "name_en": "Athens",
+    "name_gr": "Αθήνα",
+    "code": "ATH",
+    "parent_code": "GR",
+    "parent_id": 100,
+    "level": 5,
+    "country": "greece",
+    "created_at": "2024-01-01T00:00:00Z",
+    "modified_at": "2024-01-01T00:00:00Z"
+  },
+  "municipal_unit": {
+    "id": 2,
+    "name_en": "Center",
+    "name_gr": "Κέντρο",
+    "code": "CTR",
+    "parent_code": "ATH",
+    "parent_id": 1,
+    "level": 6,
+    "country": "greece",
+    "created_at": "2024-01-01T00:00:00Z",
+    "modified_at": "2024-01-01T00:00:00Z"
+  },
+  "neighborhood": 8,
+  "seller": {
+    "id": 5,
+    "display_name": "Example Realty"
+  },
+  "tags": [1, 2, 3],
+  "created_at": "2024-03-01T10:00:00Z",
+  "modified_at": "2024-06-15T08:30:00Z",
+  "first_seen_at": "2024-03-01T10:00:00Z",
+  "last_seen_at": "2024-06-15T08:30:00Z",
+  "delisted_at": null
+}
+```

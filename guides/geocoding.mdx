@@ -1,0 +1,148 @@
+---
+title: "Geocode Addresses and Look Up Parcels with Ask Wire"
+sidebarTitle: "Geocoding"
+description: "Convert address strings to coordinates, decode match quality, and look up cadastral parcel data by KAEK code using the Ask Wire Geocoding API."
+---
+
+The Ask Wire Geocoding API lets you convert a free-form address string into geographic coordinates, and optionally pull in the corresponding cadastral parcel (KAEK) data in a single call. You can also look up a parcel directly by its KAEK code to retrieve its geometry and area. Both endpoints sit under the same base URL and require a valid Bearer token.
+
+<Note>
+  The `address` parameter accepts a maximum of **255 characters**. Requests with longer strings will be rejected. Keep addresses concise — include street, number, city, and postal code where known.
+</Note>
+
+## Base URL
+
+```
+https://pandora.ask-wire.com
+```
+
+---
+
+## Geocode an address
+
+`GET /api/geocoding/geocode/`
+
+Pass any address string and receive the matched coordinates, a normalised formatted address, and a `location_type` indicating how precisely the address was matched.
+
+### Query parameters
+
+| Parameter | Type    | Required | Description                                                  |
+| --------- | ------- | -------- | ------------------------------------------------------------ |
+| `address` | string  | Yes      | Address to geocode. Maximum 255 characters.                  |
+| `kaek`    | boolean | No       | Set to `true` to also fetch cadastral parcel (KAEK) data.    |
+
+### Response fields
+
+| Field               | Type   | Description                                                         |
+| ------------------- | ------ | ------------------------------------------------------------------- |
+| `latitude`          | number | Latitude of the matched location.                                   |
+| `longitude`         | number | Longitude of the matched location.                                  |
+| `location_type`     | string | Match precision — e.g. `ROOFTOP`, `RANGE_INTERPOLATED`, `GEOMETRIC_CENTER`. |
+| `formatted_address` | string | Normalised, canonical form of the matched address.                  |
+
+<Tip>
+  A `location_type` of `ROOFTOP` means the coordinates refer to the exact building entrance. `RANGE_INTERPOLATED` means the position was estimated between two known points on a road segment. Prefer `ROOFTOP` matches for property-level accuracy.
+</Tip>
+
+### Example — geocode only
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/geocode/?address=Ermou%2015%2C%20Athens%2010563" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example response:**
+
+```json
+{
+  "latitude": 37.9776,
+  "longitude": 23.7267,
+  "location_type": "ROOFTOP",
+  "formatted_address": "Ermou 15, Athens 105 63, Greece"
+}
+```
+
+### Example — geocode and fetch KAEK
+
+Add `kaek=true` to include cadastral parcel information alongside the geocoding result. This is useful when you need both coordinates and the parcel identifier in a single round-trip.
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/geocode/?address=25%20Stasinou%20Ave%2C%20Nicosia&kaek=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Look up a parcel by KAEK code
+
+`GET /api/geocoding/kaek-search/`
+
+If you already have a KAEK (cadastral identification number), use this endpoint to retrieve the parcel's area and geometry without needing a street address.
+
+### Query parameters
+
+| Parameter   | Type   | Required | Description                         |
+| ----------- | ------ | -------- | ----------------------------------- |
+| `kaek_code` | string | Yes      | KAEK number to search for.          |
+
+### Response fields
+
+| Field      | Type   | Description                                             |
+| ---------- | ------ | ------------------------------------------------------- |
+| `kaek`     | string | The KAEK code as recorded in the cadastral registry.    |
+| `area`     | number | Parcel area in square metres.                           |
+| `geometry` | string | Parcel boundary geometry (WKT or GeoJSON string).       |
+
+### Example
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/kaek-search/?kaek_code=123456789" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example response:**
+
+```json
+{
+  "kaek": "123456789",
+  "area": 412.5,
+  "geometry": "POLYGON((23.7260 37.9770, 23.7265 37.9770, 23.7265 37.9775, 23.7260 37.9775, 23.7260 37.9770))"
+}
+```
+
+---
+
+## Step-by-step: address to parcel workflow
+
+<Steps>
+  <Step title="Geocode the address with KAEK enabled">
+    Call `/api/geocoding/geocode/` with the `address` string and `kaek=true`. You'll receive coordinates, match type, and parcel data together.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/geocoding/geocode/?address=Kifisias%20Ave%2C%20Athens&kaek=true" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Inspect the location_type">
+    Check the `location_type` field in the response. For high-precision property workflows, confirm the match is `ROOFTOP` before proceeding. If the match quality is insufficient, try a more specific address string.
+  </Step>
+
+  <Step title="Use the KAEK code for further lookups">
+    Take the KAEK code returned and call `/api/geocoding/kaek-search/` to retrieve the full parcel geometry and area. Use the geometry for GIS overlay queries or valuation area calculations.
+  </Step>
+</Steps>
+
+---
+
+## Common address formatting tips
+
+<Accordion title="How to format addresses for best results">
+
+- Include the **street number** — `Ermou 15` resolves better than `Ermou`.
+- Add the **postal code** or **city name** to disambiguate common street names: `Kifisias 10, Marousi 15125`.
+- For Cyprus addresses, include the city explicitly: `Makariou III 25, Nicosia`.
+- Avoid abbreviations where possible — spell out `Avenue` rather than `Ave` if results are poor.
+- Keep the full string under 255 characters, including spaces and special characters.
+
+</Accordion>

@@ -1,0 +1,65 @@
+---
+title: "GET /api/layer-properties/ — Query Geographic Layer Data"
+sidebarTitle: "Layer Properties"
+description: "Retrieve geographic and environmental layer attributes for a coordinate in Cyprus, including flood risk, seismic zones, wildfire exposure, and parcel data."
+openapi: "GET /api/layer-properties/"
+---
+
+The layer-properties endpoint returns geographic and environmental attributes recorded at a given coordinate, drawing from a set of Cyprus-focused spatial datasets. You supply a latitude/longitude point and the name of the layer you want to query — such as flood risk zones, seismic hazard classifications, wildfire exposure areas, or administrative building blocks — and the API returns whatever properties are associated with that location in the underlying dataset. The response shape varies by layer, reflecting each dataset's distinct attribute schema.
+
+## Endpoint
+
+```
+GET https://pandora.ask-wire.com/api/layer-properties/
+```
+
+## Authentication
+
+Include a valid Bearer token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+## Query Parameters
+
+<ParamField query="latitude" type="number" required>
+  The latitude of the point to query, in decimal degrees (e.g. `35.17`).
+</ParamField>
+
+<ParamField query="longitude" type="number" required>
+  The longitude of the point to query, in decimal degrees (e.g. `33.36`).
+</ParamField>
+
+<ParamField query="layer" type="string" required>
+  The geographic layer to query. Must be one of the following values:
+
+  | Value             | Description                                                              |
+  | ----------------- | ------------------------------------------------------------------------ |
+  | `building_blocks` | Administrative building block or urban zone the point falls within.      |
+  | `country`         | Country-level geographic attributes for the queried coordinate.          |
+  | `floods`          | Flood risk zone classification for the area.                             |
+  | `parcels`         | Land parcel data from the Cyprus cadastre.                               |
+  | `seismic_zones`   | Seismic hazard zone classification for the area.                         |
+  | `wildfire`        | Wildfire risk or exposure classification for the area.                   |
+</ParamField>
+
+## Response
+
+The API returns a `200 OK` with a JSON object whose structure depends on the `layer` you requested. Each layer surfaces a different set of fields from its underlying spatial dataset.
+
+## Example Requests
+
+**Query flood risk data:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/layer-properties/?latitude=35.17&longitude=33.36&layer=floods" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Query seismic zone classification:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/layer-properties/?latitude=35.17&longitude=33.36&layer=seismic_zones" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```

@@ -1,0 +1,255 @@
+---
+title: "Ask Wire Property Data Model: Fields, Types, and Flags"
+sidebarTitle: "Properties"
+description: "Learn the structure of the Ask Wire property object — its types, core fields, location data, quality flags, and timestamps — for listings and foreclosures."
+---
+
+Every record returned by the Ask Wire API is a **property object**. Whether you're pulling active sale listings in Athens or court-ordered foreclosures in Limassol, you work with the same document shape. Understanding the fields — and the flags that describe a record's quality and processing state — helps you build reliable pipelines and avoid subtle data issues.
+
+## Polymorphic types
+
+The top-level field `polymorphic_type` tells you which kind of property you're looking at:
+
+| Value | Description |
+|---|---|
+| `listing` | A standard market listing scraped from a portal or agent website. |
+| `foreclosure` | A court-ordered or bank-managed foreclosure property. |
+
+Use `polymorphic_type` as a query parameter to restrict results to one type:
+
+```bash
+# Only foreclosures
+GET /api/properties/?polymorphic_type=foreclosure
+```
+
+### Listing types
+
+When `polymorphic_type` is `listing`, the `listing_type` field further classifies the listing's intent:
+
+| Value | Description |
+|---|---|
+| `sale` | The property is actively listed for sale. |
+| `rent` | The property is actively listed for rent. |
+| `sold` | The property was previously listed and has sold. |
+
+<Note>
+  Foreclosure records do not carry a `listing_type`. The field will be absent or `null` for `polymorphic_type=foreclosure` records.
+</Note>
+
+---
+
+## Core fields
+
+<ResponseField name="id" type="integer">
+  The unique Ask Wire property ID. Use this to retrieve a specific record via `GET /api/properties/{id}/`.
+</ResponseField>
+
+<ResponseField name="reference_id" type="string">
+  The source platform's own identifier for this property (e.g. the portal listing ID). Useful for reconciling Ask Wire records against your own data or the originating platform.
+</ResponseField>
+
+<ResponseField name="price" type="number">
+  Listed price in euros (€).
+</ResponseField>
+
+<ResponseField name="price_per_sqm" type="number">
+  Price divided by `build_area`, expressed in €/sqm. Calculated by Ask Wire; useful for normalised comparisons across different property sizes.
+</ResponseField>
+
+<ResponseField name="property_type" type="string">
+  The property category, such as `apartment`, `house`, `maisonette`, `land`, or `commercial`. Values come from the source platform and are normalised during ingestion.
+</ResponseField>
+
+<ResponseField name="build_area" type="number">
+  The built (indoor) floor area in square metres.
+</ResponseField>
+
+<ResponseField name="land_area" type="number">
+  The total land area in square metres. Relevant primarily for houses and plots.
+</ResponseField>
+
+<ResponseField name="number_of_bedrooms" type="integer">
+  Total number of bedrooms.
+</ResponseField>
+
+<ResponseField name="number_of_bathrooms" type="integer">
+  Total number of bathrooms.
+</ResponseField>
+
+<ResponseField name="floor_number" type="integer">
+  The floor the unit sits on. Ground floor is typically `0`; basements may appear as negative integers.
+</ResponseField>
+
+<ResponseField name="construction_year" type="integer">
+  The year the building was constructed.
+</ResponseField>
+
+<ResponseField name="energy_class" type="string">
+  The energy performance certificate rating. Valid values: `A`, `B`, `C`, `D`, `E`, `F`, `G`, `Exempt`, `Under issuance`. Properties not yet rated or exempt from the requirement use the latter two values.
+</ResponseField>
+
+<ResponseField name="heating_type" type="string">
+  The type of heating system (e.g. `autonomous`, `central`, `air condition`).
+</ResponseField>
+
+<ResponseField name="view" type="string">
+  The view description from the property (e.g. `sea`, `city`, `mountain`, `garden`).
+</ResponseField>
+
+<ResponseField name="garage" type="boolean">
+  `true` if the property includes a garage.
+</ResponseField>
+
+<ResponseField name="garden" type="boolean">
+  `true` if the property includes a garden.
+</ResponseField>
+
+<ResponseField name="swimming_pool" type="boolean">
+  `true` if the property includes a swimming pool.
+</ResponseField>
+
+---
+
+## Location fields
+
+<ResponseField name="address" type="string">
+  The full address string as provided by the source platform.
+</ResponseField>
+
+<ResponseField name="latitude" type="number">
+  Decimal latitude of the property (WGS 84).
+</ResponseField>
+
+<ResponseField name="longitude" type="number">
+  Decimal longitude of the property (WGS 84).
+</ResponseField>
+
+<ResponseField name="coordinates" type="string">
+  The same point expressed as a WKT string, e.g. `POINT(23.7275 37.9838)`. Note that WKT uses **longitude first**, then latitude.
+</ResponseField>
+
+<ResponseField name="municipality" type="object">
+  The municipality the property belongs to, returned as a full `GeoEntity` object.
+
+  <Expandable title="GeoEntity fields">
+    <ResponseField name="id" type="integer">Unique Ask Wire ID for this geographic unit.</ResponseField>
+    <ResponseField name="name_en" type="string">Name in English (e.g. `Athens`).</ResponseField>
+    <ResponseField name="name_gr" type="string">Name in Greek (e.g. `Αθήνα`).</ResponseField>
+    <ResponseField name="code" type="string">Short alphanumeric code for this unit (e.g. `ATH`).</ResponseField>
+    <ResponseField name="parent_code" type="string">Code of the parent geographic unit.</ResponseField>
+    <ResponseField name="parent_id" type="integer">ID of the parent geographic unit.</ResponseField>
+    <ResponseField name="level" type="integer">Numeric level in the Ask Wire geographic hierarchy.</ResponseField>
+    <ResponseField name="country" type="string">Country this unit belongs to (`greece` or `cyprus`).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="municipal_unit" type="object">
+  The municipal unit within the municipality, returned as a full `GeoEntity` object. See the expandable above for field descriptions — the shape is identical.
+</ResponseField>
+
+<ResponseField name="regional_unit" type="integer">
+  The ID of the regional unit (level 3 in the hierarchy). Returned as a bare integer, not a nested object.
+</ResponseField>
+
+<ResponseField name="region" type="integer">
+  The ID of the region (level 2). Returned as a bare integer.
+</ResponseField>
+
+<ResponseField name="neighborhood" type="integer">
+  The ID of the neighborhood sub-division. Returned as a bare integer.
+</ResponseField>
+
+---
+
+## Seller
+
+<ResponseField name="seller" type="object">
+  The seller associated with this listing.
+
+  <Expandable title="Seller fields">
+    <ResponseField name="id" type="integer">Unique seller ID.</ResponseField>
+    <ResponseField name="display_name" type="string">The seller's display name (e.g. `Example Realty`).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Data quality and status flags
+
+Ask Wire enriches every property record with a set of boolean flags that describe its current state and reliability. Understanding these flags lets you confidently filter your results for analytics, valuation, or display use cases.
+
+### Core status flags
+
+<ResponseField name="is_live" type="boolean">
+  `true` when the property is currently active and visible on its source platform. The default `/api/properties/` endpoint only returns live records, but you can set `is_live=false` to query delisted properties explicitly.
+</ResponseField>
+
+<ResponseField name="is_public" type="boolean">
+  `true` if the property has been cleared for public access. Non-public records are withheld from standard API responses.
+</ResponseField>
+
+<ResponseField name="comparable" type="boolean">
+  `true` if Ask Wire's quality checks determine this record is suitable for use as a comparable in automated valuations. Non-comparable records may have incomplete data, suspicious pricing, or other quality issues.
+</ResponseField>
+
+<ResponseField name="outlier" type="boolean">
+  `true` if the property is flagged as a statistical outlier — typically because its price or price-per-sqm falls far outside the expected range for similar properties in the same area. Outliers are excluded from most analytics pipelines.
+</ResponseField>
+
+### Deduplication flags
+
+Ask Wire runs a deduplication pipeline to identify the same physical property listed across multiple sources. The flags below describe a record's position in that process.
+
+<ResponseField name="is_duplicated" type="boolean">
+  `true` if this record has been identified as a duplicate of another record.
+</ResponseField>
+
+<ResponseField name="is_master_property" type="boolean">
+  `true` if this record is the canonical (master) record for a group of duplicates. When building a deduplicated property dataset, filter on `is_master_property=true`.
+</ResponseField>
+
+<ResponseField name="is_leader" type="boolean">
+  `true` if this record is currently the active leader within a duplicate group — i.e. the most up-to-date or highest-quality representative. The leader may differ from the master over time as data changes.
+</ResponseField>
+
+---
+
+## AI processing flags
+
+Ask Wire uses AI to improve data quality by extracting structured information from unstructured descriptions and images. These flags reflect the AI pipeline's output.
+
+<ResponseField name="is_ai_processed" type="boolean">
+  `true` if this record has passed through the AI processing pipeline.
+</ResponseField>
+
+<ResponseField name="is_ai_updated" type="boolean">
+  `true` if the AI pipeline has written one or more field updates to this record (e.g. correcting a bedroom count inferred from the description).
+</ResponseField>
+
+<ResponseField name="is_ai_mismatched" type="boolean">
+  `true` if the AI found a discrepancy between structured fields and the free-text description (e.g. the description mentions 4 bedrooms but the structured data says 2). Records with this flag set may warrant manual review.
+</ResponseField>
+
+---
+
+## Timestamps
+
+<ResponseField name="first_seen_at" type="datetime">
+  When Ask Wire first observed this property live on its source platform.
+</ResponseField>
+
+<ResponseField name="last_seen_at" type="datetime">
+  The most recent time Ask Wire confirmed this property was still live. If a listing goes dark, this timestamp stops advancing.
+</ResponseField>
+
+<ResponseField name="delisted_at" type="datetime | null">
+  When Ask Wire detected that the property was taken off the market. `null` if the property is still live or delisting has not been confirmed.
+</ResponseField>
+
+<ResponseField name="created_at" type="datetime">
+  When the record was first inserted into the Ask Wire database.
+</ResponseField>
+
+<ResponseField name="modified_at" type="datetime">
+  When any field on the record was last updated in the Ask Wire database.
+</ResponseField>

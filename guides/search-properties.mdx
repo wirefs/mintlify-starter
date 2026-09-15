@@ -1,0 +1,219 @@
+---
+title: "Search and Filter Properties with the Ask Wire API"
+sidebarTitle: "Search Properties"
+description: "Learn how to search, filter, and retrieve property listings and foreclosures across Greece and Cyprus using the Ask Wire Properties API."
+---
+
+The Ask Wire Properties API gives you flexible, composable filters to find exactly the properties you need — whether you're surfacing sale listings in a specific Athens neighbourhood, hunting for pool-equipped houses under a budget, or running radius-based lookups for a valuation workflow. All results are paginated (default 100, max 300 per page) and return both listings and foreclosures unless you narrow the scope.
+
+<Note>
+  All requests to the Properties API must include a valid Bearer token in the `Authorization` header. Obtain a token from `https://zeus.ask-wire.com` before making your first call.
+</Note>
+
+## Base URL
+
+```
+https://pandora.ask-wire.com/api/properties/
+```
+
+---
+
+## Search approaches
+
+<Tabs>
+  <Tab title="Location-Based">
+    Find properties within a defined geographic area. Ask Wire supports three location strategies: administrative boundary IDs, radius search, and polygon / WKT geometry.
+
+    **By municipality ID**
+
+    The geographic hierarchy runs: region → regional unit → municipality → municipal unit → neighbourhood. Pass one or more comma-separated IDs to any level.
+
+    ```bash
+    # Sale apartments in municipality ID 1 (central Athens)
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=apartment&municipality=1" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **By radius**
+
+    Pass `lat`, `lng`, and `radius_km` together to search within a circle. All three parameters are required when using radius search.
+
+    ```bash
+    # All properties within 3 km of Syntagma Square
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?lat=37.9755&lng=23.7348&radius_km=3" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **By polygon / WKT**
+
+    For irregular shapes, pass a WKT geometry string with the `wkt` parameter, or use `polygon` for a comma-separated list of `lng lat` pairs.
+
+    ```bash
+    # Properties inside a custom WKT polygon
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?wkt=POLYGON((23.72%2037.97%2C23.75%2037.97%2C23.75%2037.99%2C23.72%2037.99%2C23.72%2037.97))" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Tab>
+
+  <Tab title="Attribute-Based">
+    Filter by price, size, room count, and physical features of the property or building.
+
+    **Price filters**
+
+    | Parameter   | Description         |
+    | ----------- | ------------------- |
+    | `price_min` | Minimum price (€)   |
+    | `price_max` | Maximum price (€)   |
+
+    **Size filters**
+
+    | Parameter        | Description              |
+    | ---------------- | ------------------------ |
+    | `build_area_min` | Minimum build area (m²)  |
+    | `build_area_max` | Maximum build area (m²)  |
+    | `land_area_min`  | Minimum land area (m²)   |
+    | `land_area_max`  | Maximum land area (m²)   |
+
+    **Room filters**
+
+    | Parameter              | Description                     |
+    | ---------------------- | ------------------------------- |
+    | `number_of_bedrooms`   | Exact bedroom count             |
+    | `bedrooms_min`         | Minimum bedrooms                |
+    | `bedrooms_max`         | Maximum bedrooms                |
+    | `number_of_bathrooms`  | Number of bathrooms             |
+
+    **Building features**
+
+    | Parameter               | Description                                                             |
+    | ----------------------- | ----------------------------------------------------------------------- |
+    | `energy_class`          | EPC rating: `A`, `B`, `C`, `D`, `E`, `F`, `G`, `Exempt`, `Under issuance` |
+    | `construction_year_min` | Earliest construction year                                              |
+    | `construction_year_max` | Latest construction year                                                |
+    | `garage`                | `true` / `false`                                                        |
+    | `swimming_pool`         | `true` / `false`                                                        |
+    | `garden`                | `true` / `false`                                                        |
+    | `renovated`             | `true` / `false`                                                        |
+
+    ```bash
+    # 3-bedroom houses for sale under €300,000 with a garage
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=house&number_of_bedrooms=3&price_max=300000&garage=true" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Tab>
+
+  <Tab title="Combined">
+    Stack location and attribute filters in a single request to produce highly targeted result sets.
+
+    ```bash
+    # Energy-efficient (A or B rated) sale apartments, 60–120 m², within 5 km of Thessaloniki centre
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=apartment&energy_class=A&build_area_min=60&build_area_max=120&lat=40.6401&lng=22.9444&radius_km=5" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    ```bash
+    # Comparable, non-outlier properties — ideal for valuation workflows
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?comparable=true&outlier=false&listing_type=sale&number_of_bedrooms=3&municipality=1" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Step-by-step: build a filtered search
+
+<Steps>
+  <Step title="Choose your property type">
+    Set `polymorphic_type` to `listing` or `foreclosure` to restrict the result set to one category. Omit it to return both. For listings, add `listing_type=sale`, `listing_type=rent`, or `listing_type=sold`.
+
+    ```bash
+    ?polymorphic_type=listing&listing_type=sale
+    ```
+  </Step>
+
+  <Step title="Add a location constraint">
+    Pick one of the three location strategies — boundary IDs, radius, or polygon — and add the relevant parameters.
+
+    ```bash
+    # Radius example
+    &lat=37.9838&lng=23.7275&radius_km=2
+    ```
+  </Step>
+
+  <Step title="Apply attribute filters">
+    Layer on price, size, bedroom count, and feature flags as needed.
+
+    ```bash
+    &price_max=250000&build_area_min=70&number_of_bedrooms=2&swimming_pool=true
+    ```
+  </Step>
+
+  <Step title="Apply status and quality flags">
+    For production workflows, restrict to active and reliable records.
+
+    ```bash
+    &is_live=true&comparable=true&outlier=false
+    ```
+  </Step>
+
+  <Step title="Paginate through results">
+    Use `page` and `page_size` (max 300) to iterate through large result sets.
+
+    ```bash
+    &page=2&page_size=100
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Practical examples
+
+<CodeGroup>
+```bash Sale apartments in Athens
+curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=apartment&municipality=1&is_live=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash 3-bed houses under €300k
+curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=house&number_of_bedrooms=3&price_max=300000&is_live=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash Radius search — 5 km from Piraeus port
+curl -X GET "https://pandora.ask-wire.com/api/properties/?lat=37.9477&lng=23.6432&radius_km=5&listing_type=sale" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash Comparable non-outliers for valuation
+curl -X GET "https://pandora.ask-wire.com/api/properties/?comparable=true&outlier=false&listing_type=sale&property_type=apartment&build_area_min=60&build_area_max=120" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</CodeGroup>
+
+---
+
+## Status and data quality flags
+
+Use these boolean flags to control the quality of results returned.
+
+<Accordion title="Full list of status flags">
+
+| Parameter             | Description                                                   |
+| --------------------- | ------------------------------------------------------------- |
+| `is_live`             | Property is currently active on its source platform           |
+| `is_public`           | Property is publicly visible                                  |
+| `comparable`          | Suitable for use as a comparable in valuations                |
+| `outlier`             | Flagged as a statistical outlier — set to `false` to exclude  |
+| `is_duplicated`       | Is a duplicate of another record                              |
+| `is_master_property`  | Canonical record in a duplicate group                         |
+| `is_ai_processed`     | Has been processed by the AI system                           |
+| `is_ai_mismatched`    | AI found a data discrepancy                                   |
+| `is_manually_updated` | A human has manually reviewed and updated this record         |
+
+</Accordion>
+
+<Tip>
+  For valuation and comparables workflows, always add `comparable=true&outlier=false&is_live=true` to maximise data quality. This combination filters out stale, duplicate, and statistically extreme listings.
+</Tip>

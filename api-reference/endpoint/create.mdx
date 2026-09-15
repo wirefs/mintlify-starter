@@ -1,0 +1,78 @@
+---
+title: "Create a New Property Listing — Ask Wire API Reference"
+sidebarTitle: "Create Property"
+description: "Submit a new property record to the Ask Wire database. Requires authentication and write-access permissions. Currently available during private beta."
+---
+
+The Create Property endpoint lets you add a new property record directly to the Ask Wire database. This is useful for integrations where you manage your own listings inventory and want to make those properties searchable and analysable alongside Ask Wire's aggregated data.
+
+This endpoint is currently available to **private beta** partners. Authentication is required, and your API token must be provisioned with write permissions. If you are unsure whether your token has the necessary access, or if you need guidance on the required request body fields, contact us at [support@ask-wire.com](mailto:support@ask-wire.com).
+
+---
+
+## Endpoint
+
+```
+POST https://pandora.ask-wire.com/api/properties/
+```
+
+---
+
+## Authentication
+
+All requests must include a valid Bearer token:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+---
+
+## Request body
+
+The request body must be a JSON object. The exact set of required and optional fields is documented with private beta partners during onboarding. The fields align with the [Property schema](/api-reference/endpoint/get-by-id#response) returned by the read endpoints — including `listing_type`, `property_type`, `price`, `build_area`, `address`, `latitude`, `longitude`, and geographic identifiers.
+
+To obtain the full field specification and validation rules for your integration, contact [support@ask-wire.com](mailto:support@ask-wire.com).
+
+---
+
+## Example request
+
+```bash
+curl -X POST "https://pandora.ask-wire.com/api/properties/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "polymorphic_type": "listing",
+    "listing_type": "sale",
+    "property_type": "apartment",
+    "price": 250000,
+    "build_area": 120,
+    "number_of_bedrooms": 3,
+    "number_of_bathrooms": 2,
+    "construction_year": 2010,
+    "address": "Athens, Greece",
+    "latitude": 37.9838,
+    "longitude": 23.7275,
+    "country": "greece"
+  }'
+```
+
+---
+
+## Response
+
+On success, the API returns `201 Created` with the newly created Property object in the response body. The object includes the `id` assigned by Ask Wire, which you can use in subsequent [Get by ID](/api-reference/endpoint/get-by-id) requests.
+
+| Status | Meaning |
+|--------|---------|
+| `201 Created` | Property was created successfully. The response body contains the full Property object. |
+| `400 Bad Request` | The request body is malformed or missing required fields. |
+| `401 Unauthorized` | Missing or invalid Bearer token. |
+| `403 Forbidden` | Your token does not have write permissions. |
+
+---
+
+<Note>
+  The Create Property endpoint is in private beta. Field requirements may change before general availability. Reach out to [support@ask-wire.com](mailto:support@ask-wire.com) to get access or to ask questions about the required payload structure.
+</Note>

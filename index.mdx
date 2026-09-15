@@ -1,0 +1,41 @@
+---
+title: "Ask Wire API: Real Estate Data for Greece & Cyprus"
+sidebarTitle: "Home"
+description: "Ask Wire provides structured access to property listings, foreclosures, geocoding, GIS layers, valuations, and neighbourhood data for Greece and Cyprus."
+---
+
+Ask Wire is a real estate data API built for developers, analysts, and proptech teams operating in the Greek and Cypriot markets. Whether you need live property listings, foreclosure data, geospatial layers, or neighbourhood intelligence, Ask Wire provides a single authenticated interface to the most comprehensive property dataset in the region.
+
+<CardGroup cols={2}>
+  <Card title="Introduction" icon="book-open" href="/introduction">
+    Learn what Ask Wire offers, who it's for, and how to request private beta access.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Authenticate and make your first API call in under five minutes.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Understand how Bearer token authentication works and how to keep your token fresh.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore every endpoint, parameter, and response schema in the full reference.
+  </Card>
+</CardGroup>
+
+## Get up and running
+
+Follow these steps to go from zero to your first successful API response.
+
+<Steps>
+  <Step title="Request access">
+    Ask Wire is currently in private beta. Send an email to [support@ask-wire.com](mailto:support@ask-wire.com) with a brief description of your use case to request your credentials.
+  </Step>
+  <Step title="Authenticate">
+    POST your username and password to `https://zeus.ask-wire.com/auth/otp/login` to receive a JWT Bearer token. All subsequent requests must include this token in the `Authorization` header.
+  </Step>
+  <Step title="Make your first API call">
+    Query the properties endpoint at `https://pandora.ask-wire.com/api/properties/` with your Bearer token to retrieve a paginated list of live listings and foreclosures.
+  </Step>
+  <Step title="Explore the full API">
+    Browse the API Reference to discover filtering, pagination, GIS layers, valuation tools, geocoding, and more — everything you need to build powerful real estate applications.
+  </Step>
+</Steps>

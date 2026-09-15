@@ -1,0 +1,167 @@
+---
+title: "Paginating Ask Wire API Responses: Page and Page Size"
+sidebarTitle: "Pagination"
+description: "All Ask Wire list endpoints return paginated results. Learn how to use the page and page_size parameters and iterate through the full result set."
+---
+
+Every list endpoint in the Ask Wire API — properties, municipalities, regional units, and more — returns results in pages rather than all at once. Pagination keeps individual responses fast and predictable regardless of how large your query's result set is. You control which page you want and how many results to include per page, and the response envelope tells you exactly how to fetch the next one.
+
+## Request parameters
+
+Two query parameters control pagination on all list endpoints:
+
+<ParamField query="page" type="integer" default="1">
+  The page number to retrieve. Pages are 1-indexed: the first page is `page=1`. Omitting this parameter returns the first page.
+</ParamField>
+
+<ParamField query="page_size" type="integer" default="100">
+  The number of results to include per page. Defaults to `100`. See the note below for endpoint-specific maximums.
+</ParamField>
+
+<Note>
+  The `/api/properties/` endpoint has a **maximum `page_size` of 300**. Requesting a higher value will be clamped or rejected. Other list endpoints (e.g. `/api/municipalities/`) do not enforce the 300 cap, but very large page sizes can increase response latency. Stick to 100–300 for most use cases.
+</Note>
+
+---
+
+## Response envelope
+
+Every paginated response wraps the actual data in a consistent envelope:
+
+<ResponseField name="count" type="integer">
+  The **total number of results** that match your query across all pages. Use this to calculate how many pages exist: `total_pages = ceil(count / page_size)`.
+</ResponseField>
+
+<ResponseField name="next" type="string | null">
+  The full URL of the next page, with all your original query parameters preserved. `null` when you are on the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string | null">
+  The full URL of the previous page. `null` when you are on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="array">
+  The array of objects for the current page (e.g. property records or GeoEntity records).
+</ResponseField>
+
+### Sample paginated response
+
+```json
+{
+  "count": 4821,
+  "next": "https://pandora.ask-wire.com/api/properties/?listing_type=sale&page=2&page_size=100",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "polymorphic_type": "listing",
+      "listing_type": "sale",
+      "price": 250000,
+      "build_area": 120,
+      "property_type": "apartment",
+      "address": "Athens, Greece",
+      "latitude": 37.9838,
+      "longitude": 23.7275,
+      "is_live": true,
+      "comparable": true,
+      "first_seen_at": "2024-03-01T08:00:00Z",
+      "last_seen_at": "2025-06-10T14:22:00Z",
+      "delisted_at": null
+    }
+    // ... 99 more results
+  ]
+}
+```
+
+---
+
+## Iterating through all pages
+
+The simplest way to collect all results is to follow the `next` URL until it becomes `null`.
+
+### Python example
+
+```python
+import requests
+
+BASE_URL = "https://pandora.ask-wire.com/api/properties/"
+HEADERS  = {"Authorization": "Bearer YOUR_TOKEN"}
+PARAMS   = {"listing_type": "sale", "page_size": 300}
+
+all_properties = []
+url = BASE_URL
+
+while url:
+    response = requests.get(url, headers=HEADERS, params=PARAMS)
+    response.raise_for_status()
+    data = response.json()
+
+    all_properties.extend(data["results"])
+    print(f"Fetched {len(all_properties)} / {data['count']} properties")
+
+    # Follow the next URL directly (it already includes all query params)
+    url = data["next"]
+    PARAMS = {}  # Don't re-send params once we're following `next`
+
+print(f"Done — {len(all_properties)} properties collected.")
+```
+
+### curl loop example
+
+If you prefer shell scripting, you can iterate manually by incrementing the `page` parameter:
+
+```bash
+PAGE=1
+PAGE_SIZE=300
+TOKEN="YOUR_TOKEN"
+
+while true; do
+  RESPONSE=$(curl -s \
+    "https://pandora.ask-wire.com/api/properties/?listing_type=sale&page=${PAGE}&page_size=${PAGE_SIZE}" \
+    -H "Authorization: Bearer ${TOKEN}")
+
+  # Write page results to a file
+  echo "$RESPONSE" >> all_properties.jsonl
+
+  # Check if there's a next page
+  NEXT=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['next'] or '')")
+  [ -z "$NEXT" ] && break
+
+  PAGE=$((PAGE + 1))
+done
+```
+
+<Tip>
+  Always follow the `next` URL verbatim rather than manually constructing URLs for subsequent pages. The `next` field is guaranteed to include all your original filter parameters, so you won't accidentally drop a filter mid-iteration.
+</Tip>
+
+---
+
+## Calculating total pages
+
+Use the `count` field to determine how many pages your query spans before you start iterating:
+
+```python
+import math
+
+response = requests.get(BASE_URL, headers=HEADERS, params={"page_size": 300})
+data = response.json()
+
+total_results = data["count"]
+page_size     = 300
+total_pages   = math.ceil(total_results / page_size)
+
+print(f"{total_results} results across {total_pages} pages")
+```
+
+---
+
+## Pagination across different endpoints
+
+All Ask Wire list endpoints follow the same envelope convention. The only variation is the maximum `page_size`:
+
+| Endpoint | Default `page_size` | Max `page_size` |
+|---|---|---|
+| `GET /api/properties/` | 100 | **300** |
+| `GET /api/municipalities/` | 100 | No hard cap |
+| `GET /api/regional-units/` | 100 | No hard cap |

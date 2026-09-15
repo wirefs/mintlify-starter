@@ -1,0 +1,71 @@
+---
+title: "Ask Wire API Reference: Base URLs, Auth, and Pagination"
+sidebarTitle: "Overview"
+description: "Explore the Ask Wire real estate data API for Greece and Cyprus. Learn about base URLs, Bearer token authentication, response formats, and pagination."
+---
+
+The Ask Wire API gives you programmatic access to real estate property listings, foreclosures, geographic data, and location intelligence across Greece and Cyprus. All responses are returned as JSON, and the API is split across two base URLs depending on what you need to do: authenticate first against the Auth service, then query data through the Properties API.
+
+## Base URLs
+
+The API uses two separate base URLs:
+
+| Service | Base URL |
+|---|---|
+| **Properties API** | `https://pandora.ask-wire.com` |
+| **Auth API** | `https://zeus.ask-wire.com` |
+
+All property, geographic, and enrichment endpoints are served from `https://pandora.ask-wire.com`. Authentication endpoints are served from `https://zeus.ask-wire.com`.
+
+## Authentication
+
+Every request to the Properties API must include a valid Bearer JWT token in the `Authorization` header:
+
+```
+Authorization: Bearer <your_token>
+```
+
+You obtain a token by posting your credentials to `POST /auth/otp/login` on the Auth API. Tokens are valid for **24 hours**, after which you must request a new one.
+
+<Warning>
+  Never expose your token in client-side code or public repositories. Treat it with the same care as a password.
+</Warning>
+
+## Private Beta
+
+<Note>
+  The Ask Wire API is currently in **private beta**. Access is granted on request. If you'd like to use the API, please reach out to us at [support@ask-wire.com](mailto:support@ask-wire.com).
+</Note>
+
+## Response Format
+
+All endpoints return JSON. Paginated list endpoints wrap their data in a standard envelope:
+
+| Field | Type | Description |
+|---|---|---|
+| `count` | integer | Total number of records matching the query |
+| `next` | string \| null | URL of the next page, or `null` if you are on the last page |
+| `previous` | string \| null | URL of the previous page, or `null` if you are on the first page |
+| `results` | array | The records for the current page |
+
+**Example paginated response:**
+
+```json
+{
+  "count": 342,
+  "next": "https://pandora.ask-wire.com/api/properties/?page=3",
+  "previous": "https://pandora.ask-wire.com/api/properties/?page=1",
+  "results": [...]
+}
+```
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to obtain a Bearer token from the Auth API using your Ask Wire credentials.
+  </Card>
+  <Card title="List Properties" icon="building" href="/api-reference/endpoint/get">
+    Query the full catalogue of live property listings and foreclosures across Greece and Cyprus.
+  </Card>
+</CardGroup>

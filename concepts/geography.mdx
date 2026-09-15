@@ -1,0 +1,145 @@
+---
+title: "Ask Wire Geographic Hierarchy and Location Filters"
+sidebarTitle: "Geography"
+description: "Explore Ask Wire geography: six levels from Country down to Neighborhood for Greece and Cyprus, with how to look up IDs and filter property results."
+---
+
+Ask Wire organises every property in Greece and Cyprus within a structured six-level geographic hierarchy. Rather than relying solely on free-text addresses, the API assigns each property to numeric IDs at every level of the hierarchy — from broad regions down to individual neighbourhoods. Once you know the right IDs, filtering properties to any geographic area becomes a single query parameter.
+
+## The hierarchy
+
+Ask Wire uses six levels of geographic granularity. Each level nests cleanly inside its parent:
+
+| Level | Name | Example (Greece) | Example (Cyprus) |
+|---|---|---|---|
+| 1 | **Country** | Greece | Cyprus |
+| 2 | **Region** (Περιφέρεια) | Attica | Nicosia District |
+| 3 | **Regional Unit** (Περιφερειακή Ενότητα) | Central Athens | Nicosia |
+| 4 | **Municipality** (Δήμος) | Municipality of Athens | Municipality of Nicosia |
+| 5 | **Municipal Unit** (Δημοτική Κοινότητα) | Athens Centre | Agios Andreas |
+| 6 | **Neighborhood** | Kolonaki | Old Town |
+
+<Note>
+  The `region` and `regional_unit` fields on a property are returned as bare integer IDs. The `municipality` and `municipal_unit` fields are returned as full nested `GeoEntity` objects. `neighborhood` is returned as a bare integer ID.
+</Note>
+
+---
+
+## Supported countries
+
+The `country` field accepts the following values throughout the API:
+
+| Value | Description |
+|---|---|
+| `greece` | Hellenic Republic |
+| `cyprus` | Republic of Cyprus |
+
+---
+
+## The GeoEntity object
+
+Geographic levels exposed as objects (currently `municipality` and `municipal_unit` on the property response) use the `GeoEntity` schema:
+
+<ResponseField name="id" type="integer">
+  The unique Ask Wire numeric ID for this geographic unit. Use this value in property filter parameters.
+</ResponseField>
+
+<ResponseField name="name_en" type="string">
+  The unit's name in English (e.g. `Athens`).
+</ResponseField>
+
+<ResponseField name="name_gr" type="string">
+  The unit's name in Greek (e.g. `Αθήνα`).
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  A short alphanumeric code identifying this unit (e.g. `ATH`). Codes are unique within a country.
+</ResponseField>
+
+<ResponseField name="parent_code" type="string">
+  The `code` of the parent unit one level up in the hierarchy. You can walk the tree upward using this field.
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer">
+  The numeric `id` of the parent unit. Mirrors `parent_code` but uses the Ask Wire ID space.
+</ResponseField>
+
+<ResponseField name="level" type="integer">
+  The numeric level in the hierarchy (see the table above).
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  The country this unit belongs to — `greece` or `cyprus`.
+</ResponseField>
+
+---
+
+## Looking up geographic IDs
+
+Before you can filter properties by area, you need the numeric IDs for your target locations. Two endpoints serve this purpose:
+
+**List municipalities** — returns every municipality (and, by setting the `level` parameter, any level in the hierarchy):
+
+```bash
+GET https://pandora.ask-wire.com/api/municipalities/?country=greece&name_en=Athens
+```
+
+**List regional units**:
+
+```bash
+GET https://pandora.ask-wire.com/api/regional-units/?country=greece
+```
+
+Both endpoints accept the same filter parameters: `country`, `name_en`, `name_gr`, `code`, `parent_code`, `parent_id`, and `level`. Results are paginated using the standard `page` / `page_size` envelope.
+
+A typical lookup workflow:
+
+1. Call `/api/regional-units/?country=greece&name_en=Central+Athens` to find the `id` for Central Athens.
+2. Note the `id` returned (e.g. `3`).
+3. Use that ID in your property query: `GET /api/properties/?regional_unit=3`.
+
+---
+
+## Filtering properties by geography
+
+Every geographic level has a corresponding query parameter on the `/api/properties/` endpoint. All parameters accept comma-separated IDs, so you can match multiple areas in a single request.
+
+| Parameter | Filters on | Example |
+|---|---|---|
+| `country` | Country name string | `country=greece` |
+| `region` | Region IDs | `region=1` |
+| `regional_unit` | Regional unit IDs | `regional_unit=3,4` |
+| `municipality` | Municipality IDs | `municipality=1` |
+| `municipal_unit` | Municipal unit IDs | `municipal_unit=12,15` |
+| `neighborhood` | Neighborhood IDs | `neighborhood=8` |
+
+<Tip>
+  You can pass multiple IDs to any geographic filter using a comma-separated list. For example, `municipality=1,2,5` returns properties from Athens, Thessaloniki, and Patras in one request — no need to make separate calls per city.
+</Tip>
+
+### Example: properties in two municipalities
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?municipality=1,2&listing_type=sale" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Example: all properties in a regional unit
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?regional_unit=3&polymorphic_type=listing" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Example: restrict to Cyprus
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?country=cyprus" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Combining geographic filters with spatial search
+
+Administrative boundary IDs are the fastest way to scope results, but the API also supports **radius search** (`lat`, `lng`, `radius_km`) and **polygon / WKT** queries for cases where you need to match an arbitrary shape rather than an administrative boundary. Refer to the [List properties](/api-reference/endpoint/get) reference for details on those parameters.

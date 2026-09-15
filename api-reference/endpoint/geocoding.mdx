@@ -1,0 +1,77 @@
+---
+title: "Geocode Addresses to Coordinates with Ask Wire API"
+sidebarTitle: "Geocode Address"
+description: "Convert a free-text address string into geographic coordinates, a match type, and a normalized formatted address using the Ask Wire geocoding API."
+openapi: "GET /api/geocoding/geocode/"
+---
+
+The geocoding endpoint translates a human-readable address into geographic coordinates and supporting metadata. You pass an address string as a query parameter, and the API returns the best-matched latitude/longitude pair, the match quality classification, and a normalized version of the address. Optionally, you can request KAEK cadastral parcel information for the resolved location in the same call.
+
+## Endpoint
+
+```
+GET https://pandora.ask-wire.com/api/geocoding/geocode/
+```
+
+## Authentication
+
+Include a valid Bearer token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+## Query Parameters
+
+<ParamField query="address" type="string" required>
+  The address string you want to geocode. Maximum 255 characters. Use URL encoding for spaces and special characters (e.g. replace spaces with `%20`).
+</ParamField>
+
+<ParamField query="kaek" type="boolean">
+  When set to `true`, the response also includes KAEK (cadastral parcel) information for the resolved location. Omit this parameter or set it to `false` to skip the parcel lookup.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="latitude" type="number">
+  The latitude of the matched location, in decimal degrees.
+</ResponseField>
+
+<ResponseField name="longitude" type="number">
+  The longitude of the matched location, in decimal degrees.
+</ResponseField>
+
+<ResponseField name="location_type" type="string">
+  The precision level of the geocoding match. Common values include `ROOFTOP` (exact address match), `RANGE_INTERPOLATED` (interpolated between two known points), `GEOMETRIC_CENTER`, and `APPROXIMATE`.
+</ResponseField>
+
+<ResponseField name="formatted_address" type="string">
+  A normalized, standardized version of the input address as resolved by the geocoder.
+</ResponseField>
+
+## Example Requests
+
+**Basic geocoding request:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/geocode/?address=25%20Stasinou%20Ave%2C%20Nicosia" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Geocoding with KAEK parcel data:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/geocode/?address=25%20Stasinou%20Ave%2C%20Nicosia&kaek=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example response:**
+
+```json
+{
+  "latitude": 35.1670,
+  "longitude": 33.3610,
+  "location_type": "ROOFTOP",
+  "formatted_address": "25 Stasinou Avenue, Nicosia 1060, Cyprus"
+}
+```

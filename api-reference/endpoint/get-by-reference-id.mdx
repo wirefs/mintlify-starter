@@ -1,0 +1,255 @@
+---
+title: "Retrieve Property by Source Reference ID — Ask Wire"
+sidebarTitle: "By Reference ID"
+description: "Look up a single property using the original source platform identifier, such as a portal listing ID. Returns a full Property object or 404 if not found."
+---
+
+Every property in Ask Wire retains the identifier assigned to it by the original source platform — the `reference_id`. This endpoint lets you retrieve a property record directly using that source identifier, without needing the Ask Wire `id`. This is useful when you are integrating with a portal or CRM that stores listing IDs from platforms such as Spitogatos or XE, and you want to cross-reference those records with Ask Wire data.
+
+If you already have the Ask Wire `id`, use [Get by ID](/api-reference/endpoint/get-by-id) instead. To search for properties without a known identifier, use [List Properties](/api-reference/endpoint/get).
+
+All requests require a valid Bearer token in the `Authorization` header.
+
+---
+
+## Path parameter
+
+<ParamField path="reference_id" type="string" required>
+  The source platform's own identifier for the property, e.g. `PROP-001` or `spitogatos-12345`. This value is stored as-is from the original source.
+</ParamField>
+
+---
+
+## Example request
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/ref-id/PROP-001/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Response
+
+Returns a single Property object on success (`200 OK`). Returns `404 Not Found` if no property exists with the given `reference_id`.
+
+The response schema is identical to the [Get by ID](/api-reference/endpoint/get-by-id) endpoint. All fields are documented there in full. The key fields are summarised below.
+
+### Core fields
+
+<ResponseField name="id" type="integer">
+  Unique Ask Wire property ID.
+</ResponseField>
+
+<ResponseField name="reference_id" type="string">
+  The source platform's own identifier — the same value you queried with.
+</ResponseField>
+
+<ResponseField name="polymorphic_type" type="string">
+  Property type: `listing` or `foreclosure`.
+</ResponseField>
+
+<ResponseField name="listing_type" type="string">
+  For listings: `sale`, `rent`, or `sold`.
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  Country where the property is located, e.g. `greece` or `cyprus`.
+</ResponseField>
+
+<ResponseField name="address" type="string">
+  Full address string as provided by the source.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Direct URL to the property listing on its source platform.
+</ResponseField>
+
+<ResponseField name="source" type="string">
+  Source platform name, e.g. `spitogatos`, `xe`.
+</ResponseField>
+
+<ResponseField name="source_type" type="string">
+  Source category, e.g. `broker`, `owner`.
+</ResponseField>
+
+---
+
+### Price
+
+<ResponseField name="price" type="number">
+  Listed price in euros.
+</ResponseField>
+
+<ResponseField name="price_per_sqm" type="number">
+  Price divided by build area (€/sqm).
+</ResponseField>
+
+---
+
+### Location
+
+<ResponseField name="latitude" type="number">
+  Latitude coordinate.
+</ResponseField>
+
+<ResponseField name="longitude" type="number">
+  Longitude coordinate.
+</ResponseField>
+
+<ResponseField name="coordinates" type="string">
+  WKT point string, e.g. `POINT(23.7275 37.9838)`.
+</ResponseField>
+
+<ResponseField name="municipality" type="object">
+  Municipality object. See the [GeoEntity](/api-reference/endpoint/get-by-id#geoentity) schema.
+</ResponseField>
+
+<ResponseField name="municipal_unit" type="object">
+  Municipal unit object. See the [GeoEntity](/api-reference/endpoint/get-by-id#geoentity) schema.
+</ResponseField>
+
+---
+
+### Size & layout
+
+<ResponseField name="build_area" type="number">
+  Built area in square metres.
+</ResponseField>
+
+<ResponseField name="land_area" type="number">
+  Land area in square metres.
+</ResponseField>
+
+<ResponseField name="number_of_bedrooms" type="integer">
+  Number of bedrooms.
+</ResponseField>
+
+<ResponseField name="number_of_bathrooms" type="integer">
+  Number of bathrooms.
+</ResponseField>
+
+<ResponseField name="floor_number" type="integer">
+  Floor the property is on.
+</ResponseField>
+
+---
+
+### Building details
+
+<ResponseField name="construction_year" type="integer">
+  Year the building was constructed.
+</ResponseField>
+
+<ResponseField name="energy_class" type="string">
+  Energy performance rating: `A` through `G`, `Exempt`, or `Under issuance`.
+</ResponseField>
+
+<ResponseField name="property_type" type="string">
+  Property category, e.g. `apartment`, `house`, `land`.
+</ResponseField>
+
+---
+
+### Status & data quality
+
+<ResponseField name="is_live" type="boolean">
+  Property is currently active on its source platform.
+</ResponseField>
+
+<ResponseField name="comparable" type="boolean">
+  Property is suitable for use as a comparable in valuations.
+</ResponseField>
+
+<ResponseField name="outlier" type="boolean">
+  Property is flagged as a statistical outlier.
+</ResponseField>
+
+<ResponseField name="is_duplicated" type="boolean">
+  Property is a duplicate of another record.
+</ResponseField>
+
+<ResponseField name="is_master_property" type="boolean">
+  Property is the canonical record in a duplicate group.
+</ResponseField>
+
+<ResponseField name="master_property_id" type="integer">
+  ID of the master property if this record is a duplicate.
+</ResponseField>
+
+---
+
+### Timestamps
+
+<ResponseField name="created_at" type="datetime">
+  When the record was created in the Ask Wire database.
+</ResponseField>
+
+<ResponseField name="modified_at" type="datetime">
+  When the record was last modified.
+</ResponseField>
+
+<ResponseField name="first_seen_at" type="datetime">
+  When the property was first observed live on its source platform.
+</ResponseField>
+
+<ResponseField name="last_seen_at" type="datetime">
+  When the property was last observed live on its source platform.
+</ResponseField>
+
+<ResponseField name="delisted_at" type="datetime | null">
+  When the property was taken off market. `null` if it is still active.
+</ResponseField>
+
+---
+
+## Example response
+
+```json
+{
+  "id": 1,
+  "reference_id": "PROP-001",
+  "polymorphic_type": "listing",
+  "listing_type": "sale",
+  "property_type": "apartment",
+  "price": 250000,
+  "price_per_sqm": 2083,
+  "build_area": 120,
+  "number_of_bedrooms": 3,
+  "number_of_bathrooms": 2,
+  "floor_number": 3,
+  "construction_year": 2010,
+  "energy_class": "A",
+  "address": "Athens, Greece",
+  "latitude": 37.9838,
+  "longitude": 23.7275,
+  "coordinates": "POINT(23.7275 37.9838)",
+  "country": "greece",
+  "source": "spitogatos",
+  "source_type": "broker",
+  "url": "https://example.com/property/1",
+  "is_live": true,
+  "is_public": true,
+  "comparable": true,
+  "outlier": false,
+  "is_duplicated": false,
+  "is_master_property": true,
+  "master_property_id": 1,
+  "municipality": {
+    "id": 1,
+    "name_en": "Athens",
+    "name_gr": "Αθήνα",
+    "code": "ATH",
+    "country": "greece"
+  },
+  "seller": {
+    "id": 5,
+    "display_name": "Example Realty"
+  },
+  "created_at": "2024-03-01T10:00:00Z",
+  "modified_at": "2024-06-15T08:30:00Z",
+  "first_seen_at": "2024-03-01T10:00:00Z",
+  "last_seen_at": "2024-06-15T08:30:00Z",
+  "delisted_at": null
+}
+```

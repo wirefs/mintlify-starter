@@ -1,0 +1,63 @@
+---
+title: "Delete a Property Listing — Ask Wire Real Estate API"
+sidebarTitle: "Delete Property"
+description: "Permanently delete a property record by its Ask Wire ID. Requires authentication and delete permissions. Returns 204 on success, 404 if not found."
+---
+
+The Delete Property endpoint permanently removes a property record from the Ask Wire database. You identify the record by its Ask Wire integer `id` — the same identifier returned by the [List Properties](/api-reference/endpoint/get) and [Get by ID](/api-reference/endpoint/get-by-id) endpoints. This operation is irreversible: once deleted, the record cannot be recovered through the API.
+
+Authentication is required, and your API token must be provisioned with delete permissions. If you need to verify your access level or discuss deletion workflows for bulk operations, contact [support@ask-wire.com](mailto:support@ask-wire.com).
+
+---
+
+## Endpoint
+
+```
+DELETE https://pandora.ask-wire.com/api/properties/{id}/
+```
+
+---
+
+## Authentication
+
+All requests must include a valid Bearer token:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+---
+
+## Path parameter
+
+<ParamField path="id" type="integer" required>
+  The unique Ask Wire integer ID of the property to delete. You can retrieve this ID from the [List Properties](/api-reference/endpoint/get) endpoint or from a previously stored [Get by ID](/api-reference/endpoint/get-by-id) response.
+</ParamField>
+
+---
+
+## Example request
+
+```bash
+curl -X DELETE "https://pandora.ask-wire.com/api/properties/1/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Response
+
+A successful deletion returns `204 No Content` with an empty response body.
+
+| Status | Meaning |
+|--------|---------|
+| `204 No Content` | The property was deleted successfully. No response body is returned. |
+| `401 Unauthorized` | Missing or invalid Bearer token. |
+| `403 Forbidden` | Your token does not have delete permissions for this property. |
+| `404 Not Found` | No property exists with the given `id`. |
+
+---
+
+<Warning>
+  Deletion is permanent and cannot be undone. Verify the `id` before sending the request. If you need to temporarily hide a property rather than remove it permanently, consider updating the `is_public` or `is_live` flags instead — contact [support@ask-wire.com](mailto:support@ask-wire.com) for guidance.
+</Warning>

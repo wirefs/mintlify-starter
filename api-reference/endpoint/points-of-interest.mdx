@@ -1,0 +1,157 @@
+---
+title: "Find Nearby Points of Interest Around a Coordinate"
+sidebarTitle: "Points of Interest"
+description: "Find nearby points of interest for any coordinate — schools, transit, hospitals, parks, and more — using Ask Wire Marketability Report selection logic."
+openapi: "POST /api/points-of-interest/"
+---
+
+The points-of-interest endpoint returns nearby places surrounding a given coordinate, grouped by category and ordered by distance. You send a latitude/longitude pair in a JSON request body, and the API queries every supported POI category within its designated search radius, then returns up to 16 results — capped at 3 per place type — nearest first. The selection logic is identical to what the Ask Wire Marketability Report uses, so an ad-hoc lookup for a coordinate always produces the same neighbourhood summary as the report for that same point.
+
+<Warning>
+  The URL requires a trailing slash: `/api/points-of-interest/`. If you omit it, some HTTP clients will follow a redirect for the `POST` and silently drop the request body, resulting in a `400` error.
+</Warning>
+
+## Endpoint
+
+```
+POST https://pandora.ask-wire.com/api/points-of-interest/
+```
+
+## Authentication
+
+Include a valid Bearer token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+## Request Body
+
+Send a `Content-Type: application/json` body containing both coordinate fields.
+
+<ParamField body="latitude" type="number" required>
+  The latitude of the point to search around. Must be between `-90` and `90` (inclusive). Accepts numbers, integers, or numeric strings — all are coerced to floats.
+</ParamField>
+
+<ParamField body="longitude" type="number" required>
+  The longitude of the point to search around. Must be between `-180` and `180` (inclusive). Accepts numbers, integers, or numeric strings — all are coerced to floats.
+</ParamField>
+
+## Selection Logic
+
+The API applies per-category search radii before applying the result caps:
+
+| Category                                                                 | Search radius |
+| ------------------------------------------------------------------------ | ------------- |
+| `airport`                                                                | 10 000 m      |
+| `metro_station`, `future_metro_station`, `tram_station`, `train_station` | 2 000 m       |
+| All other place types                                                    | 1 000 m       |
+
+Results are sorted nearest-first, with a maximum of **3 results per `place_type`** and **16 results total**. These limits are fixed and cannot be adjusted per request. An empty array (`[]`) is a valid response when no POIs fall within any search radius — it is not an error.
+
+## Response Fields
+
+The response is a JSON array of POI objects.
+
+<ResponseField name="id" type="integer">
+  The Ask Wire internal identifier for the POI.
+</ResponseField>
+
+<ResponseField name="external_id" type="string | null">
+  The identifier from the original source dataset (e.g. an OpenStreetMap node or way reference).
+</ResponseField>
+
+<ResponseField name="name_en" type="string | null">
+  The English name of the POI.
+</ResponseField>
+
+<ResponseField name="name_gr" type="string | null">
+  The Greek name of the POI.
+</ResponseField>
+
+<ResponseField name="place_category" type="string | null">
+  The source-provided category label for the POI (e.g. `"Supermarket"`, `"Medical"`, `"Transportation"`).
+</ResponseField>
+
+<ResponseField name="place_type" type="string">
+  The Ask Wire classification for the POI. One of: `airport`, `bank`, `bus_stop`, `bus_station`, `metro_station`, `future_metro_station`, `tram_station`, `elementary_school`, `high_school`, `primary_school`, `kindergarden`, `hospital`, `clinic`, `park`, `playground`, `fuel_station`, `sports`, `church`, `police`, `post_office`, `shopping_mall`, `train_station`, `university`, `city_hall`, `supermarket`.
+</ResponseField>
+
+<ResponseField name="latitude" type="number | null">
+  The latitude of the POI, in decimal degrees.
+</ResponseField>
+
+<ResponseField name="longitude" type="number | null">
+  The longitude of the POI, in decimal degrees.
+</ResponseField>
+
+<ResponseField name="distance" type="number | null">
+  The straight-line distance from the queried coordinate to the POI, in **metres**, rounded to 2 decimal places.
+</ResponseField>
+
+## Errors
+
+| Status             | Cause                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `400 Bad Request`  | `latitude` or `longitude` is missing, outside the valid range, or not a numeric value.  |
+| `401 Unauthorized` | The `Authorization` header is missing or contains an invalid JWT.                        |
+
+## Example Request
+
+```bash
+curl -X POST "https://pandora.ask-wire.com/api/points-of-interest/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"latitude": 37.9797085, "longitude": 23.75967373}'
+```
+
+**Abbreviated example response:**
+
+```json
+[
+  {
+    "id": 61086,
+    "external_id": "w1155869110",
+    "name_en": "Park",
+    "name_gr": "Πάρκο",
+    "place_category": "Park",
+    "place_type": "park",
+    "latitude": 37.9797085,
+    "longitude": 23.75967373,
+    "distance": 0.0
+  },
+  {
+    "id": 65625,
+    "external_id": "n2330727927",
+    "name_en": "Sklavenitis",
+    "name_gr": "Σκλαβενίτης",
+    "place_category": "Supermarket",
+    "place_type": "supermarket",
+    "latitude": 37.9802376,
+    "longitude": 23.7587177,
+    "distance": 102.38
+  },
+  {
+    "id": 26129,
+    "external_id": "11759",
+    "name_en": "EYDAP",
+    "name_gr": "ΕΥΔΑΠ",
+    "place_category": "Transportation",
+    "place_type": "bus_stop",
+    "latitude": 37.9787034,
+    "longitude": 23.7581591,
+    "distance": 173.53
+  },
+  {
+    "id": 50677,
+    "external_id": "n4464612064",
+    "name_en": "General Hospital \"Alexandra\" (Outpatient Clinics)",
+    "name_gr": "Γεν. Νοσ. \"Αλεξάνδρα\" (Εξωτερικά Ιατρεία)",
+    "place_category": "Medical",
+    "place_type": "hospital",
+    "latitude": 37.9810314,
+    "longitude": 23.7562692,
+    "distance": 332.68
+  }
+]
+```

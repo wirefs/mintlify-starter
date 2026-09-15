@@ -1,0 +1,91 @@
+---
+title: "POST /auth/otp/login — Authenticate and Get a Token"
+sidebarTitle: "Login"
+description: "Exchange your Ask Wire email and password for a Bearer JWT token. The token grants access to all Properties API endpoints and expires after 24 hours."
+---
+
+To call any protected endpoint on the Properties API, you first need a Bearer token. You get one by sending your Ask Wire credentials to the login endpoint on the Auth service. A successful request returns a JWT that you attach to every subsequent API request via the `Authorization` header.
+
+## Endpoint
+
+| | |
+|---|---|
+| **Method** | `POST` |
+| **URL** | `https://zeus.ask-wire.com/auth/otp/login` |
+| **Content-Type** | `multipart/form-data` |
+| **Authentication** | None — this is the endpoint that issues tokens |
+
+## Request Parameters
+
+<ParamField body="username" type="string" required>
+  Your Ask Wire account email address (e.g. `user@example.com`).
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Your Ask Wire account password.
+</ParamField>
+
+<Warning>
+  Submit credentials only over HTTPS. The endpoint does not accept plain HTTP connections.
+</Warning>
+
+## Example Request
+
+```bash
+curl --location 'https://zeus.ask-wire.com/auth/otp/login' \
+  --form 'username="user@example.com"' \
+  --form 'password="your_password"'
+```
+
+## Response
+
+### 200 OK
+
+A successful authentication returns a JSON object containing your JWT token.
+
+<ResponseField name="token" type="string">
+  A signed JWT Bearer token. Include this value in the `Authorization` header of every subsequent API request.
+</ResponseField>
+
+**Example response:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Using the Token
+
+Once you have the token, pass it as a Bearer credential in the `Authorization` header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Full example with a protected endpoint:**
+
+```bash
+curl --location 'https://pandora.ask-wire.com/api/properties/' \
+  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+<Note>
+  Tokens expire after **24 hours**. When a request returns `401 Unauthorized`, request a new token by calling this endpoint again with your credentials.
+</Note>
+
+### 400 Bad Request
+
+Returned when the supplied credentials are invalid or the request body is malformed.
+
+<ResponseField name="detail" type="string">
+  A human-readable message describing why authentication failed.
+</ResponseField>
+
+**Example error response:**
+
+```json
+{
+  "detail": "Unable to log in with provided credentials."
+}
+```

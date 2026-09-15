@@ -1,0 +1,498 @@
+---
+title: "List and Filter Real Estate Properties — Ask Wire API"
+sidebarTitle: "List Properties"
+description: "Search and filter the Ask Wire property database. Returns paginated listings and foreclosures across Greece and Cyprus with 50+ filter parameters."
+---
+
+The List Properties endpoint is the primary way to search the Ask Wire database. It returns a paginated collection of property records — both listings and foreclosures — and supports over fifty query parameters covering price, size, location, building characteristics, data-quality flags, and more. You can combine any number of filters in a single request; all filters are applied with AND logic.
+
+All requests require a valid Bearer token in the `Authorization` header. Results default to 100 records per page, and you can request up to 300 per page.
+
+---
+
+## Query parameters
+
+### Pagination
+
+<ParamField query="page" type="integer" default="1">
+  Page number within the paginated result set. Starts at `1`.
+</ParamField>
+
+<ParamField query="page_size" type="integer" default="100">
+  Number of results per page. Maximum is `300`.
+</ParamField>
+
+---
+
+### Property type
+
+<ParamField query="polymorphic_type" type="string">
+  Restrict results to a single property type. Accepted values: `listing`, `foreclosure`. When omitted, both types are returned.
+</ParamField>
+
+<ParamField query="listing_type" type="string">
+  Filter by a single listing type. Accepted values: `sale`, `rent`, `sold`.
+</ParamField>
+
+<ParamField query="listing_types" type="array">
+  Filter by multiple listing types in one request. Pass comma-separated values, e.g. `sale,rent`. Accepted values: `sale`, `rent`, `sold`, `null`.
+</ParamField>
+
+<ParamField query="property_type" type="array">
+  Filter by property category. Pass comma-separated strings, e.g. `apartment,house`. Common values include `apartment`, `house`, `land`, `maisonette`, `office`, `warehouse`.
+</ParamField>
+
+---
+
+### Identifiers
+
+<ParamField query="ids" type="array">
+  Return only the specified properties. Pass comma-separated Ask Wire integer IDs, e.g. `ids=101,202,303`.
+</ParamField>
+
+<ParamField query="reference_id" type="string">
+  Filter by the source platform's own identifier for the property.
+</ParamField>
+
+<ParamField query="seller" type="integer">
+  Filter properties by their seller ID.
+</ParamField>
+
+<ParamField query="master_property_id" type="integer">
+  Return all duplicate records that belong to the given master property ID.
+</ParamField>
+
+<ParamField query="polymorphic_ctype" type="integer">
+  Advanced. Filter by the internal Django content-type ID. Most integrations should use `polymorphic_type` instead. Contact [support@ask-wire.com](mailto:support@ask-wire.com) for valid values.
+</ParamField>
+
+---
+
+### Price
+
+<ParamField query="price" type="number">
+  Exact price match in euros.
+</ParamField>
+
+<ParamField query="price_min" type="number">
+  Minimum price in euros (inclusive).
+</ParamField>
+
+<ParamField query="price_max" type="number">
+  Maximum price in euros (inclusive).
+</ParamField>
+
+<ParamField query="price_per_sqm" type="number">
+  Exact price-per-square-metre match in euros.
+</ParamField>
+
+---
+
+### Size & area
+
+<ParamField query="build_area" type="number">
+  Exact build area in square metres.
+</ParamField>
+
+<ParamField query="build_area_min" type="number">
+  Minimum build area in square metres (inclusive).
+</ParamField>
+
+<ParamField query="build_area_max" type="number">
+  Maximum build area in square metres (inclusive).
+</ParamField>
+
+<ParamField query="land_area" type="number">
+  Exact land area in square metres.
+</ParamField>
+
+<ParamField query="land_area_min" type="number">
+  Minimum land area in square metres (inclusive).
+</ParamField>
+
+<ParamField query="land_area_max" type="number">
+  Maximum land area in square metres (inclusive).
+</ParamField>
+
+<ParamField query="covered_veranda_area" type="number">
+  Covered veranda area in square metres.
+</ParamField>
+
+<ParamField query="uncovered_veranda_area" type="number">
+  Uncovered veranda area in square metres.
+</ParamField>
+
+---
+
+### Rooms & layout
+
+<ParamField query="number_of_bedrooms" type="integer">
+  Exact number of bedrooms.
+</ParamField>
+
+<ParamField query="bedrooms_min" type="integer">
+  Minimum number of bedrooms (inclusive).
+</ParamField>
+
+<ParamField query="bedrooms_max" type="integer">
+  Maximum number of bedrooms (inclusive).
+</ParamField>
+
+<ParamField query="number_of_bathrooms" type="integer">
+  Exact number of bathrooms.
+</ParamField>
+
+<ParamField query="floor_number" type="integer">
+  Floor the property is on within its building.
+</ParamField>
+
+<ParamField query="building_floor_count" type="integer">
+  Total number of floors in the building.
+</ParamField>
+
+---
+
+### Building details
+
+<ParamField query="construction_year" type="integer">
+  Exact construction year.
+</ParamField>
+
+<ParamField query="construction_year_min" type="integer">
+  Earliest construction year (inclusive).
+</ParamField>
+
+<ParamField query="construction_year_max" type="integer">
+  Latest construction year (inclusive).
+</ParamField>
+
+<ParamField query="renovated" type="boolean">
+  `true` to return only renovated properties; `false` for non-renovated.
+</ParamField>
+
+<ParamField query="renovation_year" type="integer">
+  Year of the most recent renovation.
+</ParamField>
+
+<ParamField query="energy_class" type="string">
+  Energy performance certificate rating. Accepted values: `A`, `B`, `C`, `D`, `E`, `F`, `G`, `Exempt`, `Under issuance`.
+</ParamField>
+
+<ParamField query="heating_type" type="string">
+  Type of heating system, e.g. `autonomous`, `central`.
+</ParamField>
+
+<ParamField query="view" type="string">
+  Type of view from the property, e.g. `sea`, `city`, `mountain`.
+</ParamField>
+
+<ParamField query="garage" type="boolean">
+  `true` to filter for properties with a garage.
+</ParamField>
+
+<ParamField query="garden" type="boolean">
+  `true` to filter for properties with a garden.
+</ParamField>
+
+<ParamField query="swimming_pool" type="boolean">
+  `true` to filter for properties with a swimming pool.
+</ParamField>
+
+---
+
+### Geographic filters
+
+Ask Wire uses a five-level administrative hierarchy: **region → regional unit → municipality → municipal unit → neighborhood**. You can filter at any level or combine multiple levels.
+
+#### Administrative boundaries
+
+<ParamField query="region" type="array">
+  Comma-separated region IDs (hierarchy level 3).
+</ParamField>
+
+<ParamField query="regional_unit" type="array">
+  Comma-separated regional unit IDs (hierarchy level 4).
+</ParamField>
+
+<ParamField query="municipality" type="array">
+  Comma-separated municipality IDs (hierarchy level 5).
+</ParamField>
+
+<ParamField query="municipal_unit" type="array">
+  Comma-separated municipal unit IDs (hierarchy level 6).
+</ParamField>
+
+<ParamField query="neighborhood" type="array">
+  Comma-separated neighborhood IDs.
+</ParamField>
+
+<ParamField query="country" type="string">
+  Filter by country name. Accepted values: `greece`, `cyprus`.
+</ParamField>
+
+<ParamField query="address" type="string">
+  Filter by address string (partial match).
+</ParamField>
+
+#### Radius search
+
+Search within a circular area. You must supply all three parameters together.
+
+<ParamField query="lat" type="number">
+  Latitude of the center point for a radius search. Requires `lng` and `radius_km`.
+</ParamField>
+
+<ParamField query="lng" type="number">
+  Longitude of the center point for a radius search. Requires `lat` and `radius_km`.
+</ParamField>
+
+<ParamField query="radius_km" type="number">
+  Search radius in kilometers. Requires `lat` and `lng`.
+</ParamField>
+
+#### Bounding box
+
+Filter by a rectangular coordinate range, or match an exact coordinate point.
+
+<ParamField query="latitude" type="number">
+  Exact latitude match. For range filtering, use `latitude_min` and `latitude_max`.
+</ParamField>
+
+<ParamField query="longitude" type="number">
+  Exact longitude match. For range filtering, use `longitude_min` and `longitude_max`.
+</ParamField>
+
+<ParamField query="latitude_min" type="number">
+  Minimum latitude of the bounding box.
+</ParamField>
+
+<ParamField query="latitude_max" type="number">
+  Maximum latitude of the bounding box.
+</ParamField>
+
+<ParamField query="longitude_min" type="number">
+  Minimum longitude of the bounding box.
+</ParamField>
+
+<ParamField query="longitude_max" type="number">
+  Maximum longitude of the bounding box.
+</ParamField>
+
+#### Polygon / WKT
+
+For arbitrary shape queries, pass a custom geometry.
+
+<ParamField query="polygon" type="string">
+  A closed polygon defined as comma-separated `lng lat` pairs. The first and last point must be identical to close the ring.
+</ParamField>
+
+<ParamField query="wkt" type="string">
+  A WKT geometry string. Example: `POLYGON((23.7 37.9, 23.8 37.9, 23.8 38.0, 23.7 38.0, 23.7 37.9))`.
+</ParamField>
+
+---
+
+### Source
+
+<ParamField query="source" type="string">
+  Source platform name, e.g. `spitogatos`, `xe`.
+</ParamField>
+
+<ParamField query="source_type" type="string">
+  Source category, e.g. `broker`, `owner`.
+</ParamField>
+
+<ParamField query="source_types" type="array">
+  Multiple source types. Pass comma-separated values.
+</ParamField>
+
+---
+
+### Text search
+
+<ParamField query="description" type="string">
+  Filter by property description text (partial match against the description field).
+</ParamField>
+
+<ParamField query="url" type="string">
+  Filter by the source platform URL of the listing (partial match).
+</ParamField>
+
+---
+
+### Status & data quality flags
+
+These boolean flags let you filter based on the property's processing state and data quality. All accept `true` or `false`.
+
+<ParamField query="is_live" type="boolean">
+  Property is currently active on its source platform.
+</ParamField>
+
+<ParamField query="is_public" type="boolean">
+  Property is publicly visible in Ask Wire.
+</ParamField>
+
+<ParamField query="is_modified" type="boolean">
+  Property data has been modified since it was first ingested.
+</ParamField>
+
+<ParamField query="is_manually_updated" type="boolean">
+  A human operator has manually updated this property's data.
+</ParamField>
+
+<ParamField query="is_ai_updated" type="boolean">
+  The Ask Wire AI pipeline has updated this property's data.
+</ParamField>
+
+<ParamField query="is_ai_processed" type="boolean">
+  This property has been processed by the Ask Wire AI pipeline.
+</ParamField>
+
+<ParamField query="is_ai_mismatched" type="boolean">
+  The AI pipeline detected a data discrepancy for this property.
+</ParamField>
+
+<ParamField query="comparable" type="boolean">
+  Property is suitable for use as a comparable in valuations. Set `true` to restrict to valuation-grade records.
+</ParamField>
+
+<ParamField query="outlier" type="boolean">
+  Property is flagged as a statistical outlier. Set `false` to exclude outliers from analysis.
+</ParamField>
+
+<ParamField query="is_duplicated" type="boolean">
+  Property is a duplicate of another record.
+</ParamField>
+
+<ParamField query="is_master_property" type="boolean">
+  Property is the canonical record in a duplicate group.
+</ParamField>
+
+<ParamField query="is_leader" type="boolean">
+  Property is the current active leader in a duplicate group.
+</ParamField>
+
+<ParamField query="is_deduplication_processed" type="boolean">
+  Deduplication has been run on this property.
+</ParamField>
+
+---
+
+### Tags
+
+<ParamField query="tags" type="array">
+  Comma-separated tag IDs. Returns only properties that have all of the specified tags.
+</ParamField>
+
+---
+
+### Dates
+
+All date filters accept ISO 8601 datetime strings (e.g. `2025-01-01` or `2025-01-01T00:00:00Z`).
+
+<ParamField query="created_at" type="string">
+  When the record was created in the Ask Wire database.
+</ParamField>
+
+<ParamField query="modified_at" type="string">
+  When the record was last modified.
+</ParamField>
+
+<ParamField query="first_seen_at" type="string">
+  When the property was first observed live on its source platform.
+</ParamField>
+
+<ParamField query="last_seen_at" type="string">
+  When the property was last observed live on its source platform.
+</ParamField>
+
+<ParamField query="delisted_at" type="string">
+  When the property was taken off market.
+</ParamField>
+
+---
+
+## Example requests
+
+**List sale apartments in a specific municipality:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?polymorphic_type=listing&listing_type=sale&property_type=apartment&municipality=1" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Radius search — properties within 5 km of central Athens:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?lat=37.9838&lng=23.7275&radius_km=5" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Comparable, non-outlier properties with exactly 3 bedrooms:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?comparable=true&outlier=false&number_of_bedrooms=3" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Response
+
+A successful request returns HTTP `200` with a paginated JSON envelope.
+
+<ResponseField name="count" type="integer">
+  Total number of records matching your filters across all pages.
+</ResponseField>
+
+<ResponseField name="next" type="string | null">
+  URL of the next page, or `null` if you are on the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string | null">
+  URL of the previous page, or `null` if you are on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="array">
+  Array of Property objects. See the [Get by ID](/api-reference/endpoint/get-by-id) reference for the full field list.
+</ResponseField>
+
+```json
+{
+  "count": 847,
+  "next": "https://pandora.ask-wire.com/api/properties/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "polymorphic_type": "listing",
+      "listing_type": "sale",
+      "property_type": "apartment",
+      "price": 250000,
+      "price_per_sqm": 2083,
+      "build_area": 120,
+      "number_of_bedrooms": 3,
+      "number_of_bathrooms": 2,
+      "floor_number": 3,
+      "construction_year": 2010,
+      "energy_class": "A",
+      "address": "Athens, Greece",
+      "latitude": 37.9838,
+      "longitude": 23.7275,
+      "source": "spitogatos",
+      "source_type": "broker",
+      "is_live": true,
+      "is_public": true,
+      "comparable": true,
+      "outlier": false,
+      "municipality": {
+        "id": 1,
+        "name_en": "Athens",
+        "name_gr": "Αθήνα",
+        "code": "ATH",
+        "country": "greece"
+      }
+    }
+  ]
+}
+```

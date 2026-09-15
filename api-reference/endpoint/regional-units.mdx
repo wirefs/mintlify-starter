@@ -1,0 +1,146 @@
+---
+title: "GET /api/regional-units/ — Greece & Cyprus Regional Units"
+sidebarTitle: "Regional Units"
+description: "Retrieve paginated regional unit records for Greece and Cyprus. Filter by name, code, or parent to find the IDs you need for property search."
+---
+
+Regional units occupy level 4 in the Ask Wire geographic hierarchy: Country → Region → **Regional Unit** → Municipality → Municipal Unit. Use this endpoint to browse and search regional units across Greece and Cyprus, and to retrieve the IDs you need to filter the property search endpoint via the `regional_unit` parameter.
+
+**Base URL:** `https://pandora.ask-wire.com`
+
+**Endpoint:** `GET /api/regional-units/`
+
+---
+
+## Request
+
+Include your token in every request:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+### Query Parameters
+
+#### Pagination
+
+<ParamField query="page" type="integer">
+  Page number within the paginated result set.
+</ParamField>
+
+<ParamField query="page_size" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+#### Filters
+
+<ParamField query="code" type="string">
+  Filter by the regional unit's short code.
+</ParamField>
+
+<ParamField query="country" type="string">
+  Filter by country. Accepted values: `greece`, `cyprus`.
+</ParamField>
+
+<ParamField query="level" type="integer">
+  Filter by hierarchy level.
+</ParamField>
+
+<ParamField query="name_en" type="string">
+  Filter by English name.
+</ParamField>
+
+<ParamField query="name_gr" type="string">
+  Filter by Greek name.
+</ParamField>
+
+<ParamField query="parent_code" type="string">
+  Filter by parent region code. Separate multiple values with commas.
+</ParamField>
+
+<ParamField query="parent_id" type="integer">
+  Filter by the ID of the parent geographic unit.
+</ParamField>
+
+<ParamField query="created_at" type="string">
+  Filter by creation date (ISO 8601 format).
+</ParamField>
+
+<ParamField query="modified_at" type="string">
+  Filter by last modified date (ISO 8601 format).
+</ParamField>
+
+---
+
+## Response
+
+### Pagination Wrapper
+
+<ResponseField name="count" type="integer">
+  Total number of results across all pages.
+</ResponseField>
+
+<ResponseField name="next" type="string | null">
+  URL of the next page. `null` if you are on the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string | null">
+  URL of the previous page. `null` if you are on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="array">
+  Array of regional unit objects.
+</ResponseField>
+
+### GeoEntity Object
+
+<ResponseField name="id" type="integer">
+  Unique identifier for the regional unit.
+</ResponseField>
+
+<ResponseField name="name_en" type="string">
+  Name of the regional unit in English.
+</ResponseField>
+
+<ResponseField name="name_gr" type="string">
+  Name of the regional unit in Greek.
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  Short code for this regional unit.
+</ResponseField>
+
+<ResponseField name="parent_code" type="string">
+  Short code of the parent region.
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer">
+  ID of the parent region.
+</ResponseField>
+
+<ResponseField name="level" type="integer">
+  Level in the geographic hierarchy. Always `4` for regional units.
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  Country this regional unit belongs to. Either `greece` or `cyprus`.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when this record was created.
+</ResponseField>
+
+<ResponseField name="modified_at" type="string">
+  ISO 8601 timestamp of when this record was last modified.
+</ResponseField>
+
+---
+
+## Example
+
+The following request returns all regional units in Greece, first page.
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/regional-units/?country=greece" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```

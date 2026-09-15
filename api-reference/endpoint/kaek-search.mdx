@@ -1,0 +1,59 @@
+---
+title: "KAEK Code Search: Look Up a Greek Cadastral Parcel"
+sidebarTitle: "KAEK Search"
+description: "Look up a Greek cadastral land parcel by its unique KAEK identifier and retrieve its area and geometry from the national cadastre."
+openapi: "GET /api/geocoding/kaek-search/"
+---
+
+The KAEK search endpoint lets you retrieve detailed parcel information directly from the Greek national cadastre using a parcel's unique KAEK code. KAEK (Κωδικός Αριθμός Εθνικού Κτηματολογίου) is the unique alphanumeric identifier assigned to every land parcel registered in the Greek Land Registry (Κτηματολόγιο). Given a valid KAEK code, the endpoint returns the parcel's recorded area and its geographic geometry, which you can use for mapping, boundary verification, or spatial analysis.
+
+## Endpoint
+
+```
+GET https://pandora.ask-wire.com/api/geocoding/kaek-search/
+```
+
+## Authentication
+
+Include a valid Bearer token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+## Query Parameters
+
+<ParamField query="kaek_code" type="string" required>
+  The KAEK code of the parcel you want to look up. KAEK codes are the unique identifiers used in the Greek national cadastre to reference individual land parcels.
+</ParamField>
+
+## Response Fields
+
+<ResponseField name="kaek" type="string">
+  The KAEK code identifying the parcel, echoed back from the cadastre record.
+</ResponseField>
+
+<ResponseField name="area" type="number">
+  The registered area of the parcel, in square metres.
+</ResponseField>
+
+<ResponseField name="geometry" type="string">
+  The geographic boundary of the parcel, returned as a GeoJSON or WKT geometry string. You can use this to render the parcel boundary on a map or perform spatial intersection queries.
+</ResponseField>
+
+## Example Request
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/geocoding/kaek-search/?kaek_code=123456789" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example response:**
+
+```json
+{
+  "kaek": "123456789",
+  "area": 412.5,
+  "geometry": "POLYGON((23.7410 37.9750, 23.7420 37.9750, 23.7420 37.9758, 23.7410 37.9758, 23.7410 37.9750))"
+}
+```

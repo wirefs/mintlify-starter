@@ -1,0 +1,169 @@
+---
+title: "Retrieve GIS and Geographic Layer Data with Ask Wire"
+sidebarTitle: "GIS Layers"
+description: "Retrieve parcel data, crime indices, flood risk, seismic zones, and other geographic layer information for any coordinate using Ask Wire's GIS endpoints."
+---
+
+Ask Wire exposes two GIS endpoints that let you query geographic and environmental layer data for a given latitude/longitude point. The first targets Greece-specific layers such as parcel boundaries and regional crime data. The second covers a broader set of Cyprus-focused environmental and planning layers including flood zones, seismic risk, and wildfire hazard. Both return a JSON object whose shape varies depending on the layer you request.
+
+<Note>
+  The `/api/gis/` endpoint is Greece-focused (parcels, APAA zones, crime indices). The `/api/layer-properties/` endpoint is primarily Cyprus-focused (floods, seismic zones, wildfire, and more). Use each endpoint for the appropriate geography.
+</Note>
+
+## Base URL
+
+```
+https://pandora.ask-wire.com
+```
+
+---
+
+## Greece GIS layers
+
+`GET /api/gis/`
+
+Query Greece GIS data for parcel boundaries, APAA zoning, or regional crime statistics at a specific coordinate.
+
+### Query parameters
+
+| Parameter   | Type   | Required | Description                                          |
+| ----------- | ------ | -------- | ---------------------------------------------------- |
+| `latitude`  | number | Yes      | Latitude of the location to query.                   |
+| `longitude` | number | Yes      | Longitude of the location to query.                  |
+| `layer`     | string | Yes      | Layer to retrieve. One of: `apaa`, `crime`, `parcel`.|
+
+### Available layers
+
+| Layer    | Description                                                                 |
+| -------- | --------------------------------------------------------------------------- |
+| `apaa`   | APAA (Urban Planning Authority) zoning data for the queried point.          |
+| `crime`  | Regional crime index data for the area surrounding the queried coordinates. |
+| `parcel` | Cadastral parcel information at the queried location.                       |
+
+### Response
+
+Returns a JSON object with properties specific to the requested layer. The exact fields differ per layer — inspect the response keys for each layer type before relying on specific field names in your integration.
+
+| Status | Description                                                        |
+| ------ | ------------------------------------------------------------------ |
+| `200`  | Layer-specific properties for the given location.                  |
+| `400`  | Invalid or missing `latitude`, `longitude`, or `layer`.            |
+| `500`  | Error connecting to the upstream GIS service.                      |
+
+### Examples
+
+<CodeGroup>
+```bash Parcel data at a coordinate
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=38.0&longitude=23.7&layer=parcel" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash APAA zoning at a coordinate
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=37.9838&longitude=23.7275&layer=apaa" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash Crime index for an area
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=37.9838&longitude=23.7275&layer=crime" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</CodeGroup>
+
+---
+
+## Cyprus geographic layers
+
+`GET /api/layer-properties/`
+
+Retrieve properties from a broader set of environmental and planning layers for a given coordinate. This endpoint is primarily designed for Cyprus but also returns data for other covered regions.
+
+### Query parameters
+
+| Parameter   | Type   | Required | Description                                                                                              |
+| ----------- | ------ | -------- | -------------------------------------------------------------------------------------------------------- |
+| `latitude`  | number | Yes      | Latitude of the location to query.                                                                       |
+| `longitude` | number | Yes      | Longitude of the location to query.                                                                      |
+| `layer`     | string | Yes      | Layer to retrieve. One of: `building_blocks`, `country`, `floods`, `parcels`, `seismic_zones`, `wildfire`.|
+
+### Available layers
+
+| Layer            | Description                                                             |
+| ---------------- | ----------------------------------------------------------------------- |
+| `building_blocks`| Building block boundaries and associated attributes.                    |
+| `country`        | Country-level administrative boundary data.                             |
+| `floods`         | Flood risk zone classification for the queried location.                |
+| `parcels`        | Cadastral parcel data for Cyprus.                                       |
+| `seismic_zones`  | Seismic hazard zone classification.                                     |
+| `wildfire`       | Wildfire risk classification for the queried location.                  |
+
+### Response
+
+Returns a JSON object whose shape depends on the `layer` value. Contact the Ask Wire team to confirm the expected payload structure for each layer before building production integrations against specific field names.
+
+### Examples
+
+<CodeGroup>
+```bash Flood risk in Nicosia area
+curl -X GET "https://pandora.ask-wire.com/api/layer-properties/?latitude=35.17&longitude=33.36&layer=floods" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash Wildfire risk for a Cyprus coordinate
+curl -X GET "https://pandora.ask-wire.com/api/layer-properties/?latitude=34.92&longitude=33.63&layer=wildfire" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```bash Seismic zone classification
+curl -X GET "https://pandora.ask-wire.com/api/layer-properties/?latitude=35.17&longitude=33.36&layer=seismic_zones" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</CodeGroup>
+
+---
+
+## Step-by-step: run a GIS layer query
+
+<Steps>
+  <Step title="Determine the geography">
+    Identify whether your coordinates fall in Greece or Cyprus, then choose the correct endpoint. Use `/api/gis/` for Greece layers (`apaa`, `crime`, `parcel`) and `/api/layer-properties/` for Cyprus layers (`floods`, `seismic_zones`, `wildfire`, etc.).
+  </Step>
+
+  <Step title="Select your layer">
+    Choose the layer that matches your use case. For a property risk assessment you might start with `parcel` to confirm you're in the right cadastral zone, then follow up with `floods` or `seismic_zones`.
+  </Step>
+
+  <Step title="Send the request">
+    Pass `latitude`, `longitude`, and `layer` as query parameters. All three are required — omitting any one returns a `400` error.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=38.0&longitude=23.7&layer=parcel" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Parse the response">
+    The response is a dynamic JSON object. The fields present depend on the layer requested. Log a sample response from each layer during development to document the field names before parsing them in production code.
+  </Step>
+</Steps>
+
+---
+
+<Accordion title="When to use each layer">
+
+**`parcel`** — Use when you need cadastral boundary information for a Greek property, for example to verify land registry data or calculate parcel-level overlaps.
+
+**`apaa`** — Use when you need urban planning zone information, such as permitted building coefficients or land use designations.
+
+**`crime`** — Use to enrich property reports or marketability scores with area-level crime statistics.
+
+**`floods`** — Use during property due diligence in Cyprus to determine whether a location sits within a designated flood risk zone.
+
+**`seismic_zones`** — Use for insurance underwriting or construction planning in Cyprus to identify seismic hazard classifications.
+
+**`wildfire`** — Use to assess wildfire exposure for rural or peri-urban Cyprus properties.
+
+</Accordion>
+
+<Warning>
+  The response schema for each layer is dynamic and subject to change as underlying GIS datasets are updated. Avoid hardcoding field names without first confirming the schema with the Ask Wire team. Build your parsers defensively with null checks on all layer-specific fields.
+</Warning>

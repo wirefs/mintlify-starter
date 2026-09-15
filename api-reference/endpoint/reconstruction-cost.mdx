@@ -1,0 +1,102 @@
+---
+title: "GET /api/reconstruction-cost/ — Property Reconstruction Cost"
+sidebarTitle: "Reconstruction Cost"
+description: "Calculate the as-new and depreciated reconstruction cost of a property using its postal-code prefix, property type, and build area."
+---
+
+The reconstruction cost endpoint lets you estimate what it would cost to rebuild a property from scratch at today's prices. You supply the postal code, property type, and build area — the API returns the **as-new** replacement cost. Add a `construction_year` to also receive the **as-is** (depreciated) value, which accounts for the age of the building.
+
+**Base URL:** `https://pandora.ask-wire.com`
+
+**Endpoint:** `GET /api/reconstruction-cost/`
+
+---
+
+## Request
+
+Include your token in every request:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+### Query Parameters
+
+<ParamField query="postal_code" type="string" required>
+  Full postal code of the property. Only the first two digits are used for the
+  cost lookup. Must be numeric and at least two digits long.
+</ParamField>
+
+<ParamField query="property_type" type="string" required>
+  Type of the property. Accepted values: `apartment`, `house`, `maisonette`.
+</ParamField>
+
+<ParamField query="build_area" type="number" required>
+  Build area of the property in m². Must be greater than 0.
+</ParamField>
+
+<ParamField query="construction_year" type="integer">
+  Year the property was constructed. When provided, the response also includes
+  the as-is (depreciated) reconstruction cost. Cannot be a future year.
+</ParamField>
+
+---
+
+## Response
+
+### Response Fields
+
+<ResponseField name="reconstruction_cost" type="object">
+  Container object for the reconstruction cost values.
+
+  <Expandable title="reconstruction_cost fields">
+    <ResponseField name="as_new" type="number">
+      The cost to rebuild the property as new at current prices. Always present.
+    </ResponseField>
+
+    <ResponseField name="as_is" type="number">
+      The depreciated reconstruction cost, factoring in the age of the building.
+      Only present when `construction_year` is provided in the request.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Error Codes
+
+| Status | Meaning |
+|--------|---------|
+| `400`  | One or more query parameters are invalid (e.g. `build_area` ≤ 0, `construction_year` is in the future). |
+| `422`  | No reconstruction cost mapping exists for the combination of postal-code prefix and property type. |
+
+---
+
+## Examples
+
+### Without construction year
+
+This request returns only the as-new cost.
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/reconstruction-cost/?postal_code=10431&property_type=apartment&build_area=95" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### With construction year
+
+Adding `construction_year` causes the response to also include the as-is depreciated value.
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/reconstruction-cost/?postal_code=10431&property_type=apartment&build_area=95&construction_year=2005" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Response
+
+```json
+{
+  "reconstruction_cost": {
+    "as_new": 145000.0,
+    "as_is": 112000.0
+  }
+}
+```

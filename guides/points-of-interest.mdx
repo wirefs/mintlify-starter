@@ -1,0 +1,221 @@
+---
+title: "Find Nearby Points of Interest with the Ask Wire API"
+sidebarTitle: "Points of Interest"
+description: "Retrieve nearby amenities, transit stops, schools, hospitals, and more for any coordinate pair using the Ask Wire Points of Interest API."
+---
+
+The Ask Wire Points of Interest (POI) API returns a curated set of nearby amenities for any latitude/longitude point. The selection logic mirrors what appears in Ask Wire's Marketability Report, so the same coordinates always produce the same POI set regardless of whether you call this endpoint directly or generate a report. Use it to enrich property listings, power neighbourhood summaries, or feed location-based scoring models.
+
+<Warning>
+  The route **requires a trailing slash**: `POST /api/points-of-interest/`. Some HTTP clients that follow a redirect from the slashless URL will drop the request body, causing an empty or malformed request. Always include the trailing slash in your integration.
+</Warning>
+
+## Base URL
+
+```
+https://pandora.ask-wire.com/api/points-of-interest/
+```
+
+---
+
+## How selection works
+
+The API searches around your coordinate within a per-category radius and returns results ordered nearest-first.
+
+| Category                                          | Search radius |
+| ------------------------------------------------- | ------------- |
+| Airport                                           | 10,000 m      |
+| Metro / Future metro / Tram / Train               | 2,000 m       |
+| All other place types                             | 1,000 m       |
+
+Results are capped at **3 per place type** and **16 total**. These limits are fixed and cannot be adjusted per request.
+
+An empty array (`[]`) in the response means nothing was found within range — this is a valid result, not an error.
+
+---
+
+## Request
+
+Send a `POST` request with a JSON body containing the target coordinates.
+
+### Request body
+
+```json
+{ "latitude": 37.9797085, "longitude": 23.75967373 }
+```
+
+| Field       | Type   | Required | Constraints                | Description                  |
+| ----------- | ------ | -------- | -------------------------- | ---------------------------- |
+| `latitude`  | number | Yes      | `-90` ≤ value ≤ `90`       | Latitude to search around.   |
+| `longitude` | number | Yes      | `-180` ≤ value ≤ `180`     | Longitude to search around.  |
+
+Coordinates may be sent as JSON numbers, integers, or numeric strings — all are coerced to floats automatically.
+
+---
+
+## Response fields
+
+The response is a JSON array of POI objects.
+
+| Field            | Type            | Description                                                                    |
+| ---------------- | --------------- | ------------------------------------------------------------------------------ |
+| `id`             | integer         | Ask Wire POI identifier.                                                       |
+| `external_id`    | string \| null  | Identifier from the source dataset (e.g. OpenStreetMap node/way ID).           |
+| `name_en`        | string \| null  | English name of the POI.                                                       |
+| `name_gr`        | string \| null  | Greek name of the POI.                                                         |
+| `place_category` | string \| null  | Source-provided category label (e.g. `Supermarket`, `Medical`, `Education`).   |
+| `place_type`     | string          | Normalised POI type. See full list below.                                      |
+| `latitude`       | number \| null  | POI latitude.                                                                  |
+| `longitude`      | number \| null  | POI longitude.                                                                 |
+| `distance`       | number \| null  | Distance from the queried point in **metres**, rounded to 2 decimal places.    |
+
+### All `place_type` values
+
+<Accordion title="25 supported place types">
+
+| Value                    | Category          |
+| ------------------------ | ----------------- |
+| `airport`                | Transport         |
+| `bank`                   | Finance           |
+| `bus_stop`               | Transport         |
+| `bus_station`            | Transport         |
+| `metro_station`          | Transport         |
+| `future_metro_station`   | Transport         |
+| `tram_station`           | Transport         |
+| `train_station`          | Transport         |
+| `elementary_school`      | Education         |
+| `high_school`            | Education         |
+| `primary_school`         | Education         |
+| `kindergarden`           | Education         |
+| `university`             | Education         |
+| `hospital`               | Health            |
+| `clinic`                 | Health            |
+| `park`                   | Green space       |
+| `playground`             | Green space       |
+| `sports`                 | Leisure           |
+| `shopping_mall`          | Retail            |
+| `supermarket`            | Retail            |
+| `fuel_station`           | Services          |
+| `church`                 | Services          |
+| `police`                 | Services          |
+| `post_office`            | Services          |
+| `city_hall`              | Government        |
+
+</Accordion>
+
+---
+
+## Example request and response
+
+```bash
+curl -X POST "https://pandora.ask-wire.com/api/points-of-interest/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "latitude": 37.9797085, "longitude": 23.75967373 }'
+```
+
+**Abbreviated response (first 5 of up to 16 results):**
+
+```json
+[
+  {
+    "id": 61086,
+    "external_id": "w1155869110",
+    "name_en": "Park",
+    "name_gr": "Πάρκο",
+    "place_category": "Park",
+    "place_type": "park",
+    "latitude": 37.9797085,
+    "longitude": 23.75967373,
+    "distance": 0.0
+  },
+  {
+    "id": 65625,
+    "external_id": "n2330727927",
+    "name_en": "Sklavenitis",
+    "name_gr": "Σκλαβενίτης",
+    "place_category": "Supermarket",
+    "place_type": "supermarket",
+    "latitude": 37.9802376,
+    "longitude": 23.7587177,
+    "distance": 102.38
+  },
+  {
+    "id": 24826,
+    "external_id": "n6193520910",
+    "name_en": "National Bank of Greece",
+    "name_gr": "Εθνική Τράπεζα της Ελλάδος",
+    "place_category": "Bank",
+    "place_type": "bank",
+    "latitude": 37.9811669,
+    "longitude": 23.7578501,
+    "distance": 227.7
+  },
+  {
+    "id": 50677,
+    "external_id": "n4464612064",
+    "name_en": "General Hospital \"Alexandra\" (Outpatient Clinics)",
+    "name_gr": "Γεν. Νοσ. \"Αλεξάνδρα\" (Εξωτερικά Ιατρεία)",
+    "place_category": "Medical",
+    "place_type": "hospital",
+    "latitude": 37.9810314,
+    "longitude": 23.7562692,
+    "distance": 332.68
+  },
+  {
+    "id": 74634,
+    "external_id": "1014140",
+    "name_en": "6th Day Epal Athinon",
+    "name_gr": "6ο Ημερήσιο Επα. Λ. Αθηνών",
+    "place_category": "Education",
+    "place_type": "high_school",
+    "latitude": 37.981939,
+    "longitude": 23.758828,
+    "distance": 258.86
+  }
+]
+```
+
+---
+
+## Step-by-step: fetch POIs for a property
+
+<Steps>
+  <Step title="Obtain coordinates">
+    You need the latitude and longitude of the property. Use the Ask Wire Geocoding API (`GET /api/geocoding/geocode/`) to convert a street address to coordinates if you don't already have them.
+  </Step>
+
+  <Step title="Send the POST request">
+    Pass the coordinates in a JSON body to `POST /api/points-of-interest/`. Include the trailing slash and the `Content-Type: application/json` header.
+
+    ```bash
+    curl -X POST "https://pandora.ask-wire.com/api/points-of-interest/" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "latitude": 35.1725, "longitude": 33.3614 }'
+    ```
+  </Step>
+
+  <Step title="Handle the response">
+    Iterate over the returned array. Each object includes `place_type` (the normalised category), `name_en`, `name_gr`, and `distance` in metres.
+
+    If the array is empty, no POIs were found within the category radii for that location — this is a valid result and does not indicate an error.
+  </Step>
+
+  <Step title="Group and display by category">
+    Use `place_type` to group results for display. Transit-related types (`metro_station`, `tram_station`, `train_station`, `bus_stop`, `bus_station`) are commonly surfaced as commute-focused highlights. Education and health types make strong neighbourhood quality signals.
+  </Step>
+</Steps>
+
+---
+
+## Error responses
+
+| Status | When                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------ |
+| `400`  | `latitude` or `longitude` is missing, out of range, or cannot be parsed as a number.      |
+| `401`  | The `Authorization` header is missing or contains an invalid token.                        |
+
+<Tip>
+  Airports use a 10 km search radius, so even a distant airport will appear in results if it falls within range. If you are displaying POIs in a UI, consider labelling airport results with their actual distance so users understand the scale difference versus 1 km amenities.
+</Tip>

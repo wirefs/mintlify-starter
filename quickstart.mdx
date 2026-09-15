@@ -1,0 +1,62 @@
+---
+title: "Ask Wire API Quickstart: Your First Request in Minutes"
+sidebarTitle: "Quickstart"
+description: "Request access, authenticate, and make your first Ask Wire API call in minutes with this step-by-step guide for Greece and Cyprus real estate data."
+---
+
+This guide walks you through the shortest path from zero to a working Ask Wire API response. You will request credentials, exchange them for a Bearer token, and query live property listings — all in just a few steps.
+
+<Steps>
+  <Step title="Request API access">
+    Ask Wire is in private beta, so you need credentials before you can make any requests. Send an email to [support@ask-wire.com](mailto:support@ask-wire.com) and briefly describe your use case. The team will reply with your username and password.
+  </Step>
+
+  <Step title="Authenticate and receive your token">
+    Once you have credentials, POST them to the authentication endpoint as `multipart/form-data`. The response contains the JWT Bearer token you will use on every subsequent request.
+
+    ```bash
+    curl --location 'https://zeus.ask-wire.com/auth/otp/login' \
+    --form 'username="user@example.com"' \
+    --form 'password="your_password"'
+    ```
+
+    A successful response returns a JSON object containing your token:
+
+    ```json
+    {
+      "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+  </Step>
+
+  <Step title="Save your Bearer token">
+    Copy the value of the `access` field from the response. You will pass this as a Bearer token in the `Authorization` header of every API request. Store it securely — treat it like a password.
+
+    <Tip>
+      Bearer tokens expire after **24 hours**. When your token expires, repeat the authentication request with your username and password to obtain a fresh token. Build automatic re-authentication into any long-running integration to avoid unexpected 401 errors.
+    </Tip>
+  </Step>
+
+  <Step title="Make your first API call">
+    With your token in hand, query the properties endpoint to retrieve a list of active sale listings. Replace `YOUR_TOKEN` with the `access` value from the previous step.
+
+    ```bash
+    curl -X GET "https://pandora.ask-wire.com/api/properties/?listing_type=sale&page_size=5" \
+    -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    The response returns a paginated list of property objects matching your query:
+
+    ```json
+    {
+      "count": 1842,
+      "next": "https://pandora.ask-wire.com/api/properties/?listing_type=sale&page=2&page_size=5",
+      "previous": null,
+      "results": [...]
+    }
+    ```
+
+    You are now successfully querying Ask Wire. Use the `page` and `page_size` query parameters to paginate through results, and explore the [API Reference](/api-reference/introduction) to discover the full range of filters, endpoints, and data available.
+  </Step>
+</Steps>

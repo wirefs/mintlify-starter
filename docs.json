@@ -1,0 +1,120 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "luma",
+  "name": "Ask Wire",
+  "colors": {
+    "primary": "#1be49c",
+    "light": "#0c8c5c",
+    "dark": "#0c0c0c"
+  },
+  "favicon": "https://media.brand.dev/483ee27f-08fb-4d32-842d-86b4c40f9fb4.png",
+  "logo": {
+    "light": "https://media.brand.dev/07fcb57b-76a5-49f6-abdb-740da69c791f.svg",
+    "dark": "https://media.brand.dev/07fcb57b-76a5-49f6-abdb-740da69c791f.svg",
+    "href": "https://ask-wire.com"
+  },
+  "navbar": {
+    "links": [],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://ask-wire.com"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/properties",
+              "concepts/geography",
+              "concepts/pagination"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/search-properties",
+              "guides/geocoding",
+              "guides/gis-layers",
+              "guides/valuation",
+              "guides/points-of-interest"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "api-reference/endpoint/authentication"
+            ]
+          },
+          {
+            "group": "Properties",
+            "pages": [
+              "api-reference/endpoint/get",
+              "api-reference/endpoint/get-by-id",
+              "api-reference/endpoint/get-by-reference-id",
+              "api-reference/endpoint/create",
+              "api-reference/endpoint/delete"
+            ]
+          },
+          {
+            "group": "Geocoding",
+            "pages": [
+              "api-reference/endpoint/geocoding",
+              "api-reference/endpoint/kaek-search"
+            ]
+          },
+          {
+            "group": "GIS & Layers",
+            "pages": [
+              "api-reference/endpoint/gis",
+              "api-reference/endpoint/layer-properties",
+              "api-reference/endpoint/points-of-interest"
+            ]
+          },
+          {
+            "group": "Valuation & Data",
+            "pages": [
+              "api-reference/endpoint/reconstruction-cost",
+              "api-reference/endpoint/census2021"
+            ]
+          },
+          {
+            "group": "Geography",
+            "pages": [
+              "api-reference/endpoint/regional-units",
+              "api-reference/endpoint/municipalities"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "linkedin": "https://cy.linkedin.com/company/ask-wire"
+    }
+  }
+}

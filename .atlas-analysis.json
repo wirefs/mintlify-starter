@@ -1,0 +1,127 @@
+{
+  "projectType": "api-service",
+  "projectName": "Ask Wire",
+  "projectDescription": "Ask Wire is a real estate data API providing property listings, foreclosures, geocoding, GIS layers, valuation tools, and neighbourhood intelligence for Greece and Cyprus.",
+  "theme": "luma",
+  "primaryColor": "#1be49c",
+  "lightColor": "#0c8c5c",
+  "darkColor": "#0c0c0c",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/properties",
+              "concepts/geography",
+              "concepts/pagination"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/search-properties",
+              "guides/geocoding",
+              "guides/gis-layers",
+              "guides/valuation",
+              "guides/points-of-interest"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "api-reference/endpoint/authentication"
+            ]
+          },
+          {
+            "group": "Properties",
+            "pages": [
+              "api-reference/endpoint/get",
+              "api-reference/endpoint/get-by-id",
+              "api-reference/endpoint/get-by-reference-id",
+              "api-reference/endpoint/create",
+              "api-reference/endpoint/delete"
+            ]
+          },
+          {
+            "group": "Geocoding",
+            "pages": [
+              "api-reference/endpoint/geocoding",
+              "api-reference/endpoint/kaek-search"
+            ]
+          },
+          {
+            "group": "GIS & Layers",
+            "pages": [
+              "api-reference/endpoint/gis",
+              "api-reference/endpoint/layer-properties",
+              "api-reference/endpoint/points-of-interest"
+            ]
+          },
+          {
+            "group": "Valuation & Data",
+            "pages": [
+              "api-reference/endpoint/reconstruction-cost",
+              "api-reference/endpoint/census2021"
+            ]
+          },
+          {
+            "group": "Geography",
+            "pages": [
+              "api-reference/endpoint/regional-units",
+              "api-reference/endpoint/municipalities"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Comprehensive property listings and foreclosure data for Greece and Cyprus",
+    "Rich filtering by price, size, location, building attributes, and data quality flags",
+    "Geospatial search via radius, bounding box, polygon, and WKT geometry",
+    "Address geocoding with optional KAEK (cadastral parcel) lookup",
+    "GIS layer queries for parcels, crime data, flood zones, seismic zones, and wildfire risk",
+    "Reconstruction cost valuation (as-new and depreciated) by postal code and property type",
+    "Census 2021 building characteristics data",
+    "Neighbourhood points of interest (POIs) with per-category search radii",
+    "Hierarchical geographic dictionary (regions, regional units, municipalities)",
+    "JWT-based authentication via a dedicated auth service"
+  ],
+  "publicApiSurface": [
+    "POST /auth/otp/login — Authenticate and receive a Bearer token",
+    "GET /api/properties/ — List and filter properties (listings & foreclosures)",
+    "GET /api/properties/{id}/ — Retrieve a single property by ID",
+    "GET /api/properties/ref-id/{reference_id}/ — Retrieve a property by reference ID",
+    "GET /api/geocoding/geocode/ — Geocode an address string",
+    "GET /api/geocoding/kaek-search/ — Look up a parcel by KAEK cadastral code",
+    "GET /api/gis/ — Query GIS layer properties (apaa, crime, parcel) for a coordinate",
+    "GET /api/layer-properties/ — Query environmental/geographic layers for a coordinate",
+    "GET /api/reconstruction-cost/ — Calculate property reconstruction cost",
+    "GET /api/census2021/{dataset} — Query Census 2021 building characteristics",
+    "POST /api/points-of-interest/ — List nearby points of interest for a coordinate",
+    "GET /api/municipalities/ — List municipalities in the geographic hierarchy",
+    "GET /api/regional-units/ — List regional units in the geographic hierarchy"
+  ]
+}

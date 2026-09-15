@@ -1,0 +1,47 @@
+---
+title: "Ask Wire: Real Estate Data API for Greece and Cyprus"
+sidebarTitle: "Introduction"
+description: "Ask Wire delivers property listings, foreclosures, GIS layers, geocoding, valuations, and POI data through a single REST API for Greece and Cyprus."
+---
+
+Ask Wire is a real estate data platform that exposes the Greek and Cypriot property market through a clean, developer-friendly REST API. It aggregates and structures data from multiple sources — covering everything from active sales and rental listings to court-ordered foreclosures, geospatial boundaries, automated valuations, and points of interest — so you can build market intelligence tools, investment dashboards, or customer-facing property search experiences without scraping or manual data wrangling.
+
+<Note>
+  Ask Wire is currently in **private beta**. To request access, contact the team at [support@ask-wire.com](mailto:support@ask-wire.com) with a brief description of your use case. The team will respond with credentials and onboarding details.
+</Note>
+
+## What Ask Wire provides
+
+<CardGroup cols={2}>
+  <Card title="Property Listings" icon="house">
+    Access paginated, filterable listings for sale, rent, and sold properties across Greece and Cyprus, including price, size, location, and full metadata.
+  </Card>
+  <Card title="Foreclosures" icon="gavel">
+    Query court-ordered foreclosure auctions with structured data on auction dates, starting prices, property details, and legal status.
+  </Card>
+  <Card title="Geocoding" icon="location-dot">
+    Resolve Greek and Cypriot addresses to precise coordinates, or reverse-geocode coordinates to structured address components.
+  </Card>
+  <Card title="GIS Layers" icon="map">
+    Retrieve administrative boundaries, zoning polygons, and spatial datasets to power map-based interfaces or spatial analysis pipelines.
+  </Card>
+  <Card title="Valuation Tools" icon="chart-line">
+    Get automated property valuations based on location, size, property type, and current market comparables.
+  </Card>
+  <Card title="Neighbourhood Intelligence" icon="city">
+    Access points of interest, demographic signals, and area-level statistics to enrich listings or support location-based decision making.
+  </Card>
+</CardGroup>
+
+## Who Ask Wire is for
+
+Ask Wire is designed for:
+
+- **Proptech developers** building search portals, investment tools, or market analytics products focused on Greece or Cyprus.
+- **Financial institutions and funds** that need structured foreclosure and valuation data for due diligence or portfolio analysis.
+- **Real estate agencies** looking to integrate live market data into their internal tools or client-facing platforms.
+- **Researchers and analysts** who need reliable, machine-readable property data for academic or market research.
+
+## How the API works
+
+All Ask Wire endpoints follow REST conventions and return JSON. Authentication uses JWT Bearer tokens obtained from the authentication service at `zeus.ask-wire.com`. All property, geocoding, GIS, and valuation endpoints are served from `pandora.ask-wire.com`. Tokens expire every 24 hours and must be refreshed by re-authenticating. See the [Authentication guide](/authentication) and the [Quickstart](/quickstart) to get your first request working in minutes.

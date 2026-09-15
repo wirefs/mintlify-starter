@@ -1,0 +1,76 @@
+---
+title: "GET /api/gis/ — Query GIS Layer Properties for Greece"
+sidebarTitle: "GIS Layers"
+description: "Query Greece-specific GIS layers — administrative area, crime index, or cadastral parcel — at any coordinate and receive layer-specific property data."
+openapi: "GET /api/gis/"
+---
+
+The GIS endpoint queries spatial data layers specific to Greece at a given coordinate and returns the properties associated with that location for the requested layer. You provide a latitude/longitude pair and a layer name, and the API returns the attributes recorded at that point — such as administrative zone details, crime statistics, or cadastral parcel information. The exact shape of the response JSON depends on which layer you request.
+
+## Endpoint
+
+```
+GET https://pandora.ask-wire.com/api/gis/
+```
+
+## Authentication
+
+Include a valid Bearer token in the `Authorization` header of every request.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+## Query Parameters
+
+<ParamField query="latitude" type="number" required>
+  The latitude of the point to query, in decimal degrees (e.g. `38.0`).
+</ParamField>
+
+<ParamField query="longitude" type="number" required>
+  The longitude of the point to query, in decimal degrees (e.g. `23.7`).
+</ParamField>
+
+<ParamField query="layer" type="string" required>
+  The GIS layer to query. Must be one of the following values:
+
+  | Value    | Description                                                    |
+  | -------- | -------------------------------------------------------------- |
+  | `apaa`   | Administrative/planning area attributes for the queried point. |
+  | `crime`  | Crime index or crime-related statistics for the area.          |
+  | `parcel` | Cadastral parcel data from the Greek land registry.            |
+</ParamField>
+
+## Response
+
+The API returns a `200 OK` with a JSON object whose structure varies depending on the `layer` you requested. Each layer exposes different fields reflecting the underlying GIS dataset for that layer type.
+
+## Error Codes
+
+| Status | Cause                                                             |
+| ------ | ----------------------------------------------------------------- |
+| `400`  | One or more of `latitude`, `longitude`, or `layer` is missing or invalid. |
+| `500`  | The upstream GIS service is unavailable or returned an unexpected error. |
+
+## Example Requests
+
+**Query the `apaa` (planning area) layer:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=38.0&longitude=23.7&layer=apaa" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Query the `crime` layer:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=38.0&longitude=23.7&layer=crime" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Query the `parcel` (cadastral) layer:**
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/gis/?latitude=38.0&longitude=23.7&layer=parcel" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```

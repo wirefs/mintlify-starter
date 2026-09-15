@@ -1,0 +1,153 @@
+---
+title: "GET /api/municipalities/ — Greece & Cyprus Municipalities"
+sidebarTitle: "Municipalities"
+description: "Retrieve paginated municipality records for Greece and Cyprus. Filter by name, code, or country to find the IDs you need to target property searches."
+---
+
+Municipalities occupy level 5 in the Ask Wire geographic hierarchy: Country → Region → Regional Unit → **Municipality** → Municipal Unit. Use this endpoint to discover municipality names and IDs across Greece and Cyprus, then use those IDs to filter property searches down to the exact localities you need.
+
+**Base URL:** `https://pandora.ask-wire.com`
+
+**Endpoint:** `GET /api/municipalities/`
+
+<Tip>
+  Pass the municipality `id` values you discover here to the `municipality`
+  parameter of the property search endpoint to narrow results to specific
+  localities. You can supply multiple IDs as a comma-separated list —
+  for example, `municipality=1,2,3`.
+</Tip>
+
+---
+
+## Request
+
+Include your token in every request:
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+### Query Parameters
+
+#### Pagination
+
+<ParamField query="page" type="integer">
+  Page number within the paginated result set.
+</ParamField>
+
+<ParamField query="page_size" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+#### Filters
+
+<ParamField query="code" type="string">
+  Filter by the municipality's short code.
+</ParamField>
+
+<ParamField query="country" type="string">
+  Filter by country. Accepted values: `greece`, `cyprus`.
+</ParamField>
+
+<ParamField query="level" type="integer">
+  Filter by hierarchy level.
+</ParamField>
+
+<ParamField query="name_en" type="string">
+  Filter by English name.
+</ParamField>
+
+<ParamField query="name_gr" type="string">
+  Filter by Greek name.
+</ParamField>
+
+<ParamField query="parent_code" type="string">
+  Filter by parent regional unit code. Separate multiple values with commas.
+</ParamField>
+
+<ParamField query="parent_id" type="integer">
+  Filter by the ID of the parent geographic unit.
+</ParamField>
+
+<ParamField query="created_at" type="string">
+  Filter by creation date (ISO 8601 format).
+</ParamField>
+
+<ParamField query="modified_at" type="string">
+  Filter by last modified date (ISO 8601 format).
+</ParamField>
+
+---
+
+## Response
+
+### Pagination Wrapper
+
+<ResponseField name="count" type="integer">
+  Total number of results across all pages.
+</ResponseField>
+
+<ResponseField name="next" type="string | null">
+  URL of the next page. `null` if you are on the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string | null">
+  URL of the previous page. `null` if you are on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="array">
+  Array of municipality objects.
+</ResponseField>
+
+### GeoEntity Object
+
+<ResponseField name="id" type="integer">
+  Unique identifier for the municipality.
+</ResponseField>
+
+<ResponseField name="name_en" type="string">
+  Name of the municipality in English.
+</ResponseField>
+
+<ResponseField name="name_gr" type="string">
+  Name of the municipality in Greek.
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  Short code for this municipality.
+</ResponseField>
+
+<ResponseField name="parent_code" type="string">
+  Short code of the parent regional unit.
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer">
+  ID of the parent regional unit.
+</ResponseField>
+
+<ResponseField name="level" type="integer">
+  Level in the geographic hierarchy. Always `5` for municipalities.
+</ResponseField>
+
+<ResponseField name="country" type="string">
+  Country this municipality belongs to. Either `greece` or `cyprus`.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when this record was created.
+</ResponseField>
+
+<ResponseField name="modified_at" type="string">
+  ISO 8601 timestamp of when this record was last modified.
+</ResponseField>
+
+---
+
+## Example
+
+The following request returns the first page of all municipalities.
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/municipalities/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```

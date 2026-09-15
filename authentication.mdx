@@ -1,0 +1,71 @@
+---
+title: "Ask Wire API Authentication: Bearer Tokens Explained"
+sidebarTitle: "Authentication"
+description: "Learn how to obtain a JWT Bearer token from the Ask Wire auth endpoint and include it in every API request to Greece and Cyprus property data."
+---
+
+Ask Wire uses JWT Bearer token authentication. You obtain a token by posting your credentials to the authentication endpoint, then include that token in the `Authorization` header of every subsequent request. Tokens are valid for 24 hours, after which you must re-authenticate to get a new one.
+
+<Note>
+  The **authentication endpoint** is hosted at `zeus.ask-wire.com` and is separate from the main API. All property, geocoding, GIS, valuation, and neighbourhood endpoints are hosted at `pandora.ask-wire.com`. Make sure you direct login requests to `zeus` and all other API calls to `pandora`.
+</Note>
+
+## Step 1 — Obtain a Bearer token
+
+Send a `POST` request to the login endpoint with your username and password as `multipart/form-data` fields.
+
+```bash
+curl --location 'https://zeus.ask-wire.com/auth/otp/login' \
+--form 'username="user@example.com"' \
+--form 'password="your_password"'
+```
+
+A successful `200 OK` response returns a JSON object containing your access token:
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Copy the value of the `access` field. This is the Bearer token you will use on all subsequent requests.
+
+## Step 2 — Include the token in every request
+
+Pass your token in the `Authorization` header using the `Bearer` scheme:
+
+```bash
+curl -X GET "https://pandora.ask-wire.com/api/properties/?listing_type=sale&page_size=10" \
+-H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Replace `YOUR_TOKEN` with the full `access` value from the authentication response. Every endpoint on `pandora.ask-wire.com` requires this header — requests without a valid token are rejected.
+
+## Token expiry and refresh
+
+Bearer tokens expire **24 hours** after they are issued. Once a token expires, all requests made with it return `401 Unauthorized`. Re-authenticate by repeating the `POST /auth/otp/login` request with your credentials to obtain a fresh token.
+
+<Tip>
+  If you are building a server-side integration or a scheduled data pipeline, implement automatic token refresh logic: catch `401` responses and re-authenticate before retrying the failed request. This prevents disruptions in long-running workflows.
+</Tip>
+
+## Error reference
+
+| HTTP Status | Error | Cause | Resolution |
+|---|---|---|---|
+| `401 Unauthorized` | Missing or invalid token | The `Authorization` header is absent, malformed, or the token has expired. | Re-authenticate at `zeus.ask-wire.com/auth/otp/login` to get a new token. |
+| `400 Bad Request` | Bad credentials | The `username` or `password` submitted in the login request is incorrect. | Double-check your credentials. Contact [support@ask-wire.com](mailto:support@ask-wire.com) if you cannot log in. |
+
+## Request fields
+
+The login endpoint accepts `multipart/form-data` with the following fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `username` | string | Yes | Your Ask Wire account email address or username. |
+| `password` | string | Yes | Your Ask Wire account password. |
+
+<Warning>
+  Never expose your password or Bearer token in client-side code, public repositories, or logs. Treat both as secrets and rotate your password immediately if you suspect it has been compromised.
+</Warning>
